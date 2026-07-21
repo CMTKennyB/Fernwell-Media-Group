@@ -18,7 +18,7 @@ get_header();
 <section class="hero" id="top">
   <div class="wrap">
     <span class="kicker">An AEO Consultancy</span>
-    <h1>If your content isn't structured for AI to find and cite, you're invisible.</h1>
+    <h1>Every yes begins with an answer. Make sure it's yours.</h1>
     <p class="lede">Your customers are asking AI engines who to trust, what to buy, and where to go. Fernwell Media Group makes sure the answer includes you. Independent consultancy, fixed-scope engagements, reporting you can read without a glossary.</p>
     <div class="actions">
       <a class="btn primary" href="#contact">Request an AI Visibility Audit</a>
@@ -30,14 +30,14 @@ get_header();
 <section class="stats" aria-label="Why AEO matters">
   <div class="wrap grid">
     <div class="stat">
+      <div class="num">1B</div>
+      <div class="label">people now use ChatGPT every month, the fastest app ever to get there</div>
+      <div class="src">Sensor Tower via Reuters, 2026</div>
+    </div>
+    <div class="stat">
       <div class="num">68%</div>
       <div class="label">of US Google searches now end without a click</div>
       <div class="src">SparkToro / Similarweb, 2026</div>
-    </div>
-    <div class="stat">
-      <div class="num">51%</div>
-      <div class="label">of B2B buyers start product research in AI chatbots</div>
-      <div class="src">G2 Answer Economy Report, 2026</div>
     </div>
     <div class="stat">
       <div class="num">8%</div>
@@ -70,7 +70,7 @@ get_header();
       <div class="step">
         <div class="n">1</div>
         <h3>Measure</h3>
-        <p>We test the questions your customers actually ask across five AI engines and record who gets named, who gets cited, and where you're absent while competitors appear.</p>
+        <p>We test the questions your customers actually ask across the top AI engines and record who gets named, who gets cited, and where you're absent while competitors appear.</p>
       </div>
       <div class="step">
         <div class="n">2</div>
@@ -89,7 +89,7 @@ get_header();
 <section class="block" id="services">
   <div class="wrap">
     <h2>Services</h2>
-    <p class="sub">Agencies charge five figures before the work starts. Fernwell Media Group keeps engagements fixed-scope, fixed-price, and free of account managers. You work with the person who does the work.</p>
+    <p class="sub">Agencies charge five figures before the work starts. Fernwell Media Group keeps engagements fixed-scope, fixed-price, and free of account managers. You work directly with the person who does the work.</p>
     <div class="services">
       <div class="card">
         <div class="tag">Start here</div>
@@ -129,7 +129,7 @@ get_header();
       </details>
       <details>
         <summary>How do I know if AI engines mention my business today?</summary>
-        <div class="a">Ask them what your customers ask and see who gets named. That's exactly what the AI Visibility Audit does, systematically, across five engines and the query types that matter for your market, with competitors benchmarked alongside you.</div>
+        <div class="a">Ask them what your customers ask and see who gets named. That's exactly what the AI Visibility Audit does, systematically, across the top engines and the query types that matter for your market, with competitors benchmarked alongside you.</div>
       </details>
       <details>
         <summary>How long until results show up?</summary>
@@ -137,7 +137,7 @@ get_header();
       </details>
       <details>
         <summary>Do I need this if I already invest in SEO?</summary>
-        <div class="a">Probably, and your SEO investment makes AEO cheaper to add. The overlap between Google's top results and AI citations is small, which means AI visibility is a separate battle fought with related weapons. An audit will tell you quickly whether there's a real gap.</div>
+        <div class="a">Yes, and your SEO investment makes AEO cheaper to add. The overlap between Google's top results and AI citations is small, which means AI visibility is a separate battle fought with related weapons. An audit will tell you quickly whether there's a real gap.</div>
       </details>
     </div>
   </div>

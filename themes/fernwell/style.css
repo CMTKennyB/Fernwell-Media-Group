@@ -198,8 +198,19 @@ footer.site a { color: var(--ink-soft); }
 .entry-content img { max-width: 100%; height: auto; border-radius: 10px; }
 .entry-content a { color: var(--accent); }
 
+/* Accessibility */
+.screen-reader-text { position: absolute; clip: rect(1px,1px,1px,1px); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; }
+.skip-link:focus {
+  position: fixed; top: 12px; left: 12px; z-index: 100;
+  clip: auto; clip-path: none; width: auto; height: auto; overflow: visible;
+  background: var(--fill); color: var(--fill-ink);
+  padding: 12px 20px; border-radius: 8px; font-weight: 600; text-decoration: none;
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.stats :focus-visible, .contact-box :focus-visible, footer.site :focus-visible { outline-color: var(--fill); }
+.faq summary:focus-visible { outline-offset: 4px; }
+
 /* WP core niceties */
-.screen-reader-text { position: absolute; clip: rect(1px,1px,1px,1px); }
 .alignleft { float: left; margin: 0 20px 12px 0; }
 .alignright { float: right; margin: 0 0 12px 20px; }
 .aligncenter { display: block; margin: 0 auto; }

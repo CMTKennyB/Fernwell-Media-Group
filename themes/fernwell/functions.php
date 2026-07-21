@@ -60,6 +60,76 @@ function fernwell_favicon() {
 add_action( 'wp_head', 'fernwell_favicon', 5 );
 
 /**
+ * Meta description, Open Graph, and Twitter Card tags.
+ * WordPress core emits none of these; the theme owns them so every share
+ * and crawl gets a description and the FMG card image.
+ */
+function fernwell_social_meta() {
+	$title       = wp_get_document_title();
+	$description = 'Fernwell Media Group is an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond. We help businesses get found and cited by ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews.';
+	$url         = home_url( '/' );
+	$type        = 'website';
+
+	if ( is_singular() && ! is_front_page() ) {
+		$url = get_permalink();
+		$excerpt = get_the_excerpt();
+		if ( $excerpt ) {
+			$description = wp_strip_all_tags( $excerpt );
+		}
+		if ( is_singular( 'post' ) ) {
+			$type = 'article';
+		}
+	}
+
+	$image = get_theme_file_uri( 'assets/og-card.png' );
+
+	echo '<meta name="description" content="' . esc_attr( $description ) . '">' . "\n";
+	echo '<meta property="og:type" content="' . esc_attr( $type ) . '">' . "\n";
+	echo '<meta property="og:site_name" content="Fernwell Media Group">' . "\n";
+	echo '<meta property="og:title" content="' . esc_attr( $title ) . '">' . "\n";
+	echo '<meta property="og:description" content="' . esc_attr( $description ) . '">' . "\n";
+	echo '<meta property="og:url" content="' . esc_url( $url ) . '">' . "\n";
+	echo '<meta property="og:image" content="' . esc_url( $image ) . '">' . "\n";
+	echo '<meta property="og:image:width" content="1200">' . "\n";
+	echo '<meta property="og:image:height" content="630">' . "\n";
+	echo '<meta property="og:locale" content="en_US">' . "\n";
+	echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+	echo '<meta name="twitter:title" content="' . esc_attr( $title ) . '">' . "\n";
+	echo '<meta name="twitter:description" content="' . esc_attr( $description ) . '">' . "\n";
+	echo '<meta name="twitter:image" content="' . esc_url( $image ) . '">' . "\n";
+}
+add_action( 'wp_head', 'fernwell_social_meta', 4 );
+
+/**
+ * Serve /llms.txt from the theme so the file stays version-controlled.
+ * Content lives in the theme's llms.txt; a rewrite rule maps the root URL
+ * to it. After theme activation or changes here, flush permalinks once
+ * (Settings > Permalinks > Save Changes).
+ */
+function fernwell_llms_rewrite() {
+	add_rewrite_rule( '^llms\.txt$', 'index.php?fernwell_llms=1', 'top' );
+}
+add_action( 'init', 'fernwell_llms_rewrite' );
+
+function fernwell_llms_query_var( $vars ) {
+	$vars[] = 'fernwell_llms';
+	return $vars;
+}
+add_filter( 'query_vars', 'fernwell_llms_query_var' );
+
+function fernwell_llms_serve() {
+	if ( get_query_var( 'fernwell_llms' ) ) {
+		$file = get_theme_file_path( 'llms.txt' );
+		if ( file_exists( $file ) ) {
+			header( 'Content-Type: text/plain; charset=utf-8' );
+			readfile( $file );
+			exit;
+		}
+	}
+}
+add_action( 'template_redirect', 'fernwell_llms_serve' );
+
+/**
  * Structured data: one connected graph, every node cross-referenced by @id.
  *
  * Sitewide: ProfessionalService (#org), Person (#kenneth), WebSite (#website),

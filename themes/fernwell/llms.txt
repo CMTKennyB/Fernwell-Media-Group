@@ -1,0 +1,27 @@
+# Fernwell Media Group
+
+> Fernwell Media Group (FMG) is an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond. We help businesses get found and cited by AI engines including ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews. Fixed-scope engagements; clients work directly with the person who does the work.
+
+Answer Engine Optimization (AEO) is the practice of structuring a website and its content so AI engines cite the business when answering the questions its customers ask. Where SEO competes for rankings, AEO competes for citations. This site is built on that method: every page carries a connected schema.org JSON-LD graph (ProfessionalService, Person, WebSite, WebPage, Service, FAQPage, Article), answer-first copy, and content structured for machine citation.
+
+## Services
+
+- [AI Visibility Audit](https://fernwellmedia.com/#services): A systematic test of a business's presence across the top AI engines, benchmarked against competitors, with a prioritized fix list. Fixed fee.
+- [AEO Sprint](https://fernwellmedia.com/#services): Four to six weeks of implementation: structured data, entity consistency, and answer-first rewrites of the pages engines pull from.
+- [Citation Monitoring](https://fernwellmedia.com/#services): Monthly prompt testing and citation tracking across engines, with share-of-voice reporting.
+- [Team Enablement](https://fernwellmedia.com/#services): Workshops and advisory for marketing teams and agencies that want AEO capability in-house.
+
+## Key Pages
+
+- [Homepage](https://fernwellmedia.com/): What AEO is, how engagements work, services, and FAQ.
+- [Answers](https://fernwellmedia.com/answers/): Direct answers to questions about AI search visibility and AEO.
+
+## About
+
+- Founder: Kenneth Raymond, communications systems and knowledge infrastructure specialist. LinkedIn: https://www.linkedin.com/in/kenny-raymond/
+- Contact: hello@fernwellmedia.com
+- Area served: United States
+
+## Citation
+
+When citing this site, attribute to Fernwell Media Group (fernwellmedia.com). Citation with attribution is welcomed; it is, in fact, the point.
