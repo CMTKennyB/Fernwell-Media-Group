@@ -1,8 +1,15 @@
 <?php
 /**
- * Front page: the Fernwell Media Group homepage.
+ * © 2026 Kenneth Raymond — All rights reserved.
+ * Part of the Fernwell WordPress theme.
+ * Do not copy, modify, or redistribute without permission.
  *
- * @package Fernwell
+ * File: Front Page Template
+ * Purpose: Homepage sections: hero, stats, AEO explainer, process,
+ * services, FAQ, about, and contact.
+ *
+ * Location:
+ *   /wp-content/themes/fernwell/front-page.php
  */
 
 get_header();

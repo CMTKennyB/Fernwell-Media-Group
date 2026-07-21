@@ -1,8 +1,14 @@
 <?php
 /**
- * Static page template.
+ * © 2026 Kenneth Raymond — All rights reserved.
+ * Part of the Fernwell WordPress theme.
+ * Do not copy, modify, or redistribute without permission.
  *
- * @package Fernwell
+ * File: Static Page Template
+ * Purpose: Default layout for static pages.
+ *
+ * Location:
+ *   /wp-content/themes/fernwell/page.php
  */
 
 get_header();

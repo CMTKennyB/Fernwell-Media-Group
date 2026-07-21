@@ -1,8 +1,15 @@
 <?php
 /**
- * Fernwell theme functions.
+ * © 2026 Kenneth Raymond — All rights reserved.
+ * Part of the Fernwell WordPress theme.
+ * Do not copy, modify, or redistribute without permission.
  *
- * @package Fernwell
+ * File: Theme Functions
+ * Purpose: Theme supports, style and font enqueue, SVG favicon fallback,
+ * and the site-wide JSON-LD schema graph.
+ *
+ * Location:
+ *   /wp-content/themes/fernwell/functions.php
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -100,7 +107,6 @@ function fernwell_schema() {
 			'url'           => $base,
 			'founder'       => array( '@id' => $base . '#kenneth' ),
 			'areaServed'    => 'United States',
-			'serviceType'   => 'Answer Engine Optimization',
 			'email'         => 'mailto:hello@fernwellmedia.com',
 			'knowsAbout'    => array(
 				'Answer Engine Optimization',

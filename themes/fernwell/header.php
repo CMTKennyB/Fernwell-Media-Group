@@ -1,8 +1,14 @@
 <?php
 /**
- * Site header.
+ * © 2026 Kenneth Raymond — All rights reserved.
+ * Part of the Fernwell WordPress theme.
+ * Do not copy, modify, or redistribute without permission.
  *
- * @package Fernwell
+ * File: Site Header
+ * Purpose: Document head, FMG brand lockup, and primary navigation.
+ *
+ * Location:
+ *   /wp-content/themes/fernwell/header.php
  */
 ?><!DOCTYPE html>
 <html <?php language_attributes(); ?>>

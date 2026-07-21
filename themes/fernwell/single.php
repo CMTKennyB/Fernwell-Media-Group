@@ -1,8 +1,14 @@
 <?php
 /**
- * Single post: one answer.
+ * © 2026 Kenneth Raymond — All rights reserved.
+ * Part of the Fernwell WordPress theme.
+ * Do not copy, modify, or redistribute without permission.
  *
- * @package Fernwell
+ * File: Single Answer Template
+ * Purpose: Single post layout with byline and publish/updated dates.
+ *
+ * Location:
+ *   /wp-content/themes/fernwell/single.php
  */
 
 get_header();

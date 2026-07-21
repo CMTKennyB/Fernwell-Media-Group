@@ -12,6 +12,19 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: fernwell
 */
 
+/**
+ * © 2026 Kenneth Raymond — All rights reserved.
+ * Part of the Fernwell WordPress theme.
+ * Do not copy, modify, or redistribute without permission.
+ *
+ * File: Theme Stylesheet
+ * Purpose: Grove design system: palette tokens, typography, layout,
+ * components, and the Answers/blog styles.
+ *
+ * Location:
+ *   /wp-content/themes/fernwell/style.css
+ */
+
 :root {
   --ink: #17211d;
   --ink-soft: #4d5a55;
