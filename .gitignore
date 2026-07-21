@@ -1,0 +1,13 @@
+# Not tracked: media, caches, core-managed noise
+uploads/
+upgrade/
+cache/
+*.log
+.DS_Store
+Thumbs.db
+
+# Default themes and stock plugins
+themes/twentytwenty*/
+plugins/akismet/
+plugins/hello.php
+
