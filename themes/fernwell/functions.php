@@ -53,11 +53,42 @@ function fernwell_favicon() {
 add_action( 'wp_head', 'fernwell_favicon', 5 );
 
 /**
- * Structured data: ProfessionalService + Person sitewide, FAQPage on the front page.
+ * Structured data: one connected graph, every node cross-referenced by @id.
+ *
+ * Sitewide: ProfessionalService (#org), Person (#kenneth), WebSite (#website),
+ * and a WebPage node for the current URL. Front page adds FAQPage and the four
+ * Service nodes. Singular pages add BreadcrumbList; posts add Article.
  * The FAQ answers here must mirror the visible FAQ content in front-page.php.
  */
 function fernwell_schema() {
 	$base = home_url( '/' );
+
+	$current_url = $base;
+	if ( is_singular() ) {
+		$current_url = get_permalink();
+	} elseif ( is_home() ) {
+		$page_for_posts = get_option( 'page_for_posts' );
+		$current_url    = $page_for_posts ? get_permalink( $page_for_posts ) : $base;
+	}
+
+	$services = array(
+		array(
+			'name' => 'AI Visibility Audit',
+			'desc' => 'A systematic test of a business\'s presence across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmarked against competitors, with a prioritized fix list. Fixed fee, delivered as a report plus a working session.',
+		),
+		array(
+			'name' => 'AEO Sprint',
+			'desc' => 'Four to six weeks of implementation: structured data across the site, entity consistency everywhere the business appears, and answer-first rewrites of the pages AI engines pull from.',
+		),
+		array(
+			'name' => 'Citation Monitoring',
+			'desc' => 'Monthly prompt testing and citation tracking across AI engines, share-of-voice against competitors, and a plain-English report on what moved and why.',
+		),
+		array(
+			'name' => 'Team Enablement',
+			'desc' => 'Workshops and advisory for marketing teams and agencies that want AEO capability in-house.',
+		),
+	);
 
 	$graph = array(
 		array(
@@ -70,6 +101,14 @@ function fernwell_schema() {
 			'founder'       => array( '@id' => $base . '#kenneth' ),
 			'areaServed'    => 'United States',
 			'serviceType'   => 'Answer Engine Optimization',
+			'email'         => 'mailto:hello@fernwellmedia.com',
+			'knowsAbout'    => array(
+				'Answer Engine Optimization',
+				'Generative Engine Optimization',
+				'Structured data and schema.org markup',
+				'Entity SEO',
+				'AI search visibility',
+			),
 		),
 		array(
 			'@type'       => 'Person',
@@ -80,11 +119,69 @@ function fernwell_schema() {
 			'url'         => $base . 'about/',
 			'email'       => 'mailto:hello@fernwellmedia.com',
 			'worksFor'    => array( '@id' => $base . '#org' ),
+			'knowsAbout'  => array(
+				'Answer Engine Optimization',
+				'Communications systems',
+				'Knowledge infrastructure',
+				'Information architecture',
+			),
 			'sameAs'      => array(
 				'https://www.linkedin.com/in/YOUR-PROFILE',
 			),
 		),
+		array(
+			'@type'     => 'WebSite',
+			'@id'       => $base . '#website',
+			'name'      => 'Fernwell Media Group',
+			'url'       => $base,
+			'publisher' => array( '@id' => $base . '#org' ),
+			'inLanguage' => 'en-US',
+		),
+		array(
+			'@type'      => 'WebPage',
+			'@id'        => $current_url . '#webpage',
+			'url'        => $current_url,
+			'name'       => wp_get_document_title(),
+			'isPartOf'   => array( '@id' => $base . '#website' ),
+			'about'      => array( '@id' => $base . '#org' ),
+			'inLanguage' => 'en-US',
+		),
 	);
+
+	if ( is_front_page() ) {
+		foreach ( $services as $i => $svc ) {
+			$graph[] = array(
+				'@type'       => 'Service',
+				'@id'         => $base . '#service-' . ( $i + 1 ),
+				'name'        => $svc['name'],
+				'description' => $svc['desc'],
+				'serviceType' => 'Answer Engine Optimization',
+				'provider'    => array( '@id' => $base . '#org' ),
+				'areaServed'  => 'United States',
+			);
+		}
+	}
+
+	if ( is_singular() && ! is_front_page() ) {
+		$graph[] = array(
+			'@type'           => 'BreadcrumbList',
+			'@id'             => $current_url . '#breadcrumb',
+			'itemListElement' => array(
+				array(
+					'@type'    => 'ListItem',
+					'position' => 1,
+					'name'     => 'Home',
+					'item'     => $base,
+				),
+				array(
+					'@type'    => 'ListItem',
+					'position' => 2,
+					'name'     => get_the_title(),
+					'item'     => $current_url,
+				),
+			),
+		);
+	}
 
 	if ( is_front_page() ) {
 		$faqs = array(
@@ -127,13 +224,16 @@ function fernwell_schema() {
 	if ( is_singular( 'post' ) ) {
 		global $post;
 		$graph[] = array(
-			'@type'         => 'Article',
-			'headline'      => get_the_title( $post ),
-			'datePublished' => get_the_date( 'c', $post ),
-			'dateModified'  => get_the_modified_date( 'c', $post ),
-			'author'        => array( '@id' => $base . '#kenneth' ),
-			'publisher'     => array( '@id' => $base . '#org' ),
-			'mainEntityOfPage' => get_permalink( $post ),
+			'@type'            => 'Article',
+			'@id'              => $current_url . '#article',
+			'headline'         => get_the_title( $post ),
+			'datePublished'    => get_the_date( 'c', $post ),
+			'dateModified'     => get_the_modified_date( 'c', $post ),
+			'author'           => array( '@id' => $base . '#kenneth' ),
+			'publisher'        => array( '@id' => $base . '#org' ),
+			'isPartOf'         => array( '@id' => $base . '#website' ),
+			'mainEntityOfPage' => array( '@id' => $current_url . '#webpage' ),
+			'inLanguage'       => 'en-US',
 		);
 	}
 
