@@ -126,7 +126,7 @@ function fernwell_schema() {
 				'Information architecture',
 			),
 			'sameAs'      => array(
-				'https://www.linkedin.com/in/YOUR-PROFILE',
+				'https://www.linkedin.com/in/kenny-raymond/',
 			),
 		),
 		array(
