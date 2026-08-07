@@ -52,6 +52,14 @@ get_header();
   </div>
 </section>
 
+<section class="block alt" id="scan">
+  <div class="wrap">
+    <h2>See how an AI engine reads your site</h2>
+    <p class="sub">Before we ever talk, run the same first check we do: a free, single-page scan that scores whether AI engines can actually read you. No account, no email.</p>
+    <?php echo do_shortcode( '[fmg_readability_scan]' ); ?>
+  </div>
+</section>
+
 <section class="block" id="what">
   <div class="wrap">
     <h2>What is Answer Engine Optimization?</h2>
