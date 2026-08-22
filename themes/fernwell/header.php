@@ -30,7 +30,11 @@
         <span class="bot">Media Group</span>
       </span>
     </a>
-    <nav class="links">
+    <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
+      <span class="nav-toggle__bars" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="screen-reader-text">Menu</span>
+    </button>
+    <nav class="links" id="site-nav">
       <a href="<?php echo esc_url( home_url( '/#how' ) ); ?>">How it works</a>
       <a href="<?php echo esc_url( home_url( '/#services' ) ); ?>">Services</a>
       <a href="<?php echo esc_url( home_url( '/#faq' ) ); ?>">FAQ</a>

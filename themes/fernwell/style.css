@@ -4,7 +4,7 @@ Theme URI: https://fernwellgroup.com/
 Author: Fernwell Media Group
 Author URI: https://fernwellgroup.com/
 Description: Custom theme for Fernwell Media Group, an independent Answer Engine Optimization consultancy. Grove palette: stone paper, deep green, apricot accents. Built AEO-first with structured data and answer-first layout.
-Version: 1.0.0
+Version: 1.1.0
 Requires at least: 6.0
 Requires PHP: 7.4
 License: GNU General Public License v2 or later
@@ -44,7 +44,8 @@ Text Domain: fernwell
   --font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+html, body { overflow-x: clip; }
 body {
   font-family: var(--font-body);
   color: var(--ink);
@@ -78,6 +79,30 @@ nav.links a { text-decoration: none; color: var(--ink-soft); font-size: .95rem; 
 nav.links a:hover { color: var(--ink); }
 nav.links a.cta { color: var(--fill-ink); background: var(--fill); padding: 9px 16px; border-radius: 7px; font-weight: 600; }
 nav.links a.cta:hover { background: var(--fill-hover); color: var(--fill-ink); }
+
+/* Mobile nav */
+.nav-toggle { display: none; background: none; border: 0; padding: 10px; margin-right: -10px; cursor: pointer; }
+.nav-toggle__bars { display: block; width: 24px; }
+.nav-toggle__bars span {
+  display: block; height: 2px; background: var(--ink); border-radius: 2px;
+  margin: 5px 0; transition: transform .2s ease, opacity .2s ease;
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+@media (max-width: 880px) {
+  .nav-toggle { display: block; }
+  nav.links {
+    display: none; position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; align-items: stretch;
+    background: var(--paper); border-bottom: 1px solid var(--line);
+    padding: 6px 24px 18px; box-shadow: 0 14px 28px rgba(20,32,30,.08);
+  }
+  nav.links.open { display: flex; }
+  nav.links a { margin: 0; padding: 14px 2px; font-size: 1.05rem; border-bottom: 1px solid var(--line); }
+  nav.links a:last-of-type { border-bottom: 0; }
+  nav.links a.cta { margin-top: 10px; text-align: center; padding: 13px 16px; border-bottom: 0; }
+}
 
 /* Hero */
 .hero { padding: 100px 0 76px; }
@@ -209,6 +234,16 @@ footer.site a { color: var(--ink-soft); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 .stats :focus-visible, .contact-box :focus-visible, footer.site :focus-visible { outline-color: var(--fill); }
 .faq summary:focus-visible { outline-offset: 4px; }
+
+/* Small screens: tighter vertical rhythm and box padding */
+@media (max-width: 640px) {
+  .hero { padding: 60px 0 52px; }
+  section.block { padding: 60px 0; }
+  .stats { padding: 40px 0; }
+  .stats .grid { gap: 24px; }
+  .contact-box { padding: 38px 24px; }
+  .answers-head, .entry { padding-top: 60px; }
+}
 
 /* WP core niceties */
 .alignleft { float: left; margin: 0 20px 12px 0; }

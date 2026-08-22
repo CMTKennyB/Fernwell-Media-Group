@@ -24,6 +24,7 @@ Custom theme, no page builder, no SEO plugin; the theme owns its own markup, met
 | `single.php` / `page.php` | Post and page layouts |
 | `page-privacy-policy.php`, `page-terms-of-service.php`, `page-cookie-policy.php` | Slug-matched legal page templates; content is version-controlled here, the WP pages exist only to provide URLs |
 | `404.php` | Not-found page |
+| `assets/js/nav.js` | Mobile nav: hamburger disclosure toggle below 880px |
 | `llms.txt` | Served at `/llms.txt` via rewrite rule (flush permalinks after changes) |
 | `assets/og-card.png` | 1200x630 social share card |
 
@@ -36,6 +37,13 @@ Brand rule: the M and G never appear detached from the F. At small sizes the mar
 ### Schema architecture
 
 One connected JSON-LD graph per page, nodes cross-referenced by `@id`: ProfessionalService (`#org`) and Person (`#kenneth`) sitewide, WebSite + WebPage on every page, four Service nodes and FAQPage on the front page, BreadcrumbList on singular pages, Article on posts. FAQ text in `functions.php` must mirror the visible FAQ in `front-page.php`. Validates clean (0 errors, 0 warnings) at validator.schema.org.
+
+## MU-plugins: `mu-plugins/`
+
+| File | Role |
+| --- | --- |
+| `fmg-readability-scan.php` | FMG AI Readability & Citability Scanner: shortcode `[fmg_readability_scan]`, REST endpoint `POST /wp-json/fmg/v1/scan`, SSRF-guarded fetcher, per-IP rate limiting |
+| `fmg-hardening.php` | Baseline security: headers, XML-RPC off, username enumeration closed, version fingerprint removed |
 
 ## Local development
 

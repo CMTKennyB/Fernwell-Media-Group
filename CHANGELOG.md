@@ -7,6 +7,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Theme: mobile navigation**: below 880px the header links collapse into an
+  accessible hamburger menu (real button with aria-expanded, dropdown panel,
+  closes on link tap, Escape, or outside tap). Previously the five nav links
+  had no mobile handling at all and overflowed the header on phones.
+  New file: `assets/js/nav.js`.
+- **Theme: mobile spacing pass**: tighter hero/section/stats padding and a
+  narrower contact-box inset below 640px; `scroll-padding-top` so anchor links
+  no longer land content underneath the sticky header; `overflow-x: clip`
+  guard against sideways scroll on small screens.
+- **Security: FMG Security Hardening mu-plugin** (`fmg-hardening.php`):
+  security headers (nosniff, X-Frame-Options, Referrer-Policy,
+  Permissions-Policy), XML-RPC and X-Pingback disabled, REST users endpoint
+  gated to logged-in users, author archives redirected home (username
+  enumeration), WordPress version fingerprint removed, vague login errors.
 - **Scanner: Citability score**: a second, independently scored 0-100 axis measuring
   whether a page is shaped to be *cited* (distinct from whether it can be *read*).
   Four deterministic, single-page checks: a name a citation can point to
@@ -36,6 +50,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Scanner: authoritative sources recognize biomedical databases**: the
+  Citability check that counts outbound links to authoritative sources now
+  recognizes the canonical genetics and medical databases (OMIM, Ensembl,
+  ClinGen, UniProt, HGNC, gnomAD, Cochrane Library) alongside the existing
+  .gov/.edu/journal/DOI hosts. Health and genetics pages that cite these
+  databases were previously scored as having no authoritative sources at all;
+  they now get proper credit for well-sourced claims.
+- **Scanner: fetch hardening**: responses are now capped at the transport layer
+  (`limit_response_size`), closing a memory exhaustion hole where a huge
+  response was fully downloaded before being trimmed to the 2 MB ceiling; all
+  scanner fetches also set `reject_unsafe_urls`, which revalidates followed
+  redirects so a robots.txt or llms.txt redirect cannot bounce the fetch to an
+  internal host.
+- Theme version bumped to 1.1.0 (style.css header and `FERNWELL_VERSION`) so
+  browsers cache-bust the updated CSS and pick up nav.js.
 - **Domain and email migration**: every reference to the old fernwellmedia.com
   domain and old contact addresses now points to fernwellgroup.com and
   hello@fernwellgroup.com. Touches the theme templates (footer, front page,

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FERNWELL_VERSION', '1.0.0' );
+define( 'FERNWELL_VERSION', '1.1.0' );
 
 /**
  * Theme supports.
@@ -45,6 +45,7 @@ function fernwell_scripts() {
 		null
 	);
 	wp_enqueue_style( 'fernwell-style', get_stylesheet_uri(), array( 'fernwell-fonts' ), FERNWELL_VERSION );
+	wp_enqueue_script( 'fernwell-nav', get_theme_file_uri( 'assets/js/nav.js' ), array(), FERNWELL_VERSION, true );
 }
 add_action( 'wp_enqueue_scripts', 'fernwell_scripts' );
 

@@ -213,10 +213,14 @@ function fmg_scan_fetch( $url, $max_hops = 3 ) {
 		$response = wp_remote_get(
 			$url,
 			array(
-				'timeout'     => 12,
-				'redirection' => 0,
-				'user-agent'  => FMG_SCAN_UA,
-				'headers'     => array( 'Accept' => 'text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8' ),
+				'timeout'             => 12,
+				'redirection'         => 0,
+				'user-agent'          => FMG_SCAN_UA,
+				'headers'             => array( 'Accept' => 'text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8' ),
+				// The response is capped at the transport layer; without this the
+				// full body lands in memory before the substr below can trim it.
+				'limit_response_size' => FMG_SCAN_MAX_BYTES,
+				'reject_unsafe_urls'  => true,
 			)
 		);
 
@@ -478,9 +482,13 @@ function fmg_scan_fetch_text( $url ) {
 	$response = wp_remote_get(
 		$url,
 		array(
-			'timeout'     => 8,
-			'redirection' => 2,
-			'user-agent'  => FMG_SCAN_UA,
+			'timeout'             => 8,
+			'redirection'         => 2,
+			'user-agent'          => FMG_SCAN_UA,
+			// reject_unsafe_urls also revalidates each followed redirect, so a
+			// robots.txt/llms.txt redirect cannot bounce the fetch to an internal host.
+			'limit_response_size' => 262144,
+			'reject_unsafe_urls'  => true,
 		)
 	);
 
@@ -1058,7 +1066,7 @@ function fmg_scan_check_citability( $ctx ) {
 			if ( '' === $host || 0 === strcasecmp( $host, $origin_host ) ) {
 				continue;
 			}
-			if ( preg_match( '/(\.gov|\.edu|\.ac\.uk|doi\.org|ncbi\.nlm\.nih\.gov|pubmed|nih\.gov|who\.int|wikipedia\.org|orcid\.org)/i', $host ) ) {
+			if ( preg_match( '/(\.gov|\.edu|\.ac\.uk|doi\.org|ncbi\.nlm\.nih\.gov|pubmed|nih\.gov|who\.int|wikipedia\.org|orcid\.org|omim\.org|ensembl\.org|clinicalgenome\.org|uniprot\.org|genenames\.org|gnomad\.broadinstitute\.org|cochranelibrary\.com)/i', $host ) ) {
 				$sources++;
 			}
 		}
