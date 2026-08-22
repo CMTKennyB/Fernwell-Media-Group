@@ -25,7 +25,7 @@ get_header();
       <p>
         <a class="btn primary" href="<?php echo esc_url( home_url( '/' ) ); ?>">Back to the homepage</a>
       </p>
-      <p>Or tell us what you were looking for at <a href="mailto:hello@fernwellmedia.com">hello@fernwellmedia.com</a> and a human will answer.</p>
+      <p>Or tell us what you were looking for at <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a> and a human will answer.</p>
     </div>
   </div>
 </div>

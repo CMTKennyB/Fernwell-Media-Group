@@ -24,7 +24,7 @@ get_header();
     <div class="entry-content">
 
       <h2>Agreement</h2>
-      <p>These Terms of Service constitute an agreement between you and Fernwell Media Group ("Fernwell," "we," "us," or "our") governing your use of fernwellmedia.com (the "Site"). By using the Site, you accept these terms as they appear on the date of your use. If you do not agree, do not use the Site. These terms should be read together with our <a href="/privacy-policy/">Privacy Policy</a> and <a href="/cookie-policy/">Cookie Policy</a>.</p>
+      <p>These Terms of Service constitute an agreement between you and Fernwell Media Group ("Fernwell," "we," "us," or "our") governing your use of fernwellgroup.com (the "Site"). By using the Site, you accept these terms as they appear on the date of your use. If you do not agree, do not use the Site. These terms should be read together with our <a href="/privacy-policy/">Privacy Policy</a> and <a href="/cookie-policy/">Cookie Policy</a>.</p>
 
       <h2>Purpose of the Site</h2>
       <p>The Site describes Fernwell's Answer Engine Optimization consulting services and publishes educational content about AI search visibility. Content on the Site is provided for general informational purposes only. It is not professional advice for your specific situation, and your use of the Site does not create a client or advisory relationship. An engagement with Fernwell begins only when agreed in writing.</p>
@@ -66,7 +66,7 @@ get_header();
       <p>To the maximum extent permitted by law, these terms are governed by the laws of the State of Michigan, and any dispute not subject to arbitration shall be brought exclusively in the courts of that state.</p>
 
       <h2>Contact Information</h2>
-      <p>Questions regarding these terms may be directed to <a href="mailto:hello@fernwellmedia.com">hello@fernwellmedia.com</a>.</p>
+      <p>Questions regarding these terms may be directed to <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a>.</p>
 
     </div>
   </div>

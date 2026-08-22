@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: FMG AI Readability Scanner
- * Description: Deterministic single-URL scan scoring whether AI engines can read a site. Shortcode: [fmg_readability_scan]
- * Version:     1.0.0
+ * Plugin Name: FMG AI Readability & Citability Scanner
+ * Description: Deterministic single-URL scan scoring whether AI engines can read a site (Readability) and whether its pages are shaped to be cited (Citability). Shortcode: [fmg_readability_scan]
+ * Version:     1.1.0-alpha
  * Author:      Fernwell Media Group
  *
  * Drop this file directly into wp-content/mu-plugins/ (no subfolder: mu-plugins
@@ -14,7 +14,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /** Where the "Talk to Fernwell" button sends results. Change here, changes everywhere. */
-const FMG_SCAN_CONTACT = 'hey@fernwellmediagroup.com';
+const FMG_SCAN_CONTACT = 'hello@fernwellgroup.com';
 
 /** Scans allowed per IP per hour. */
 const FMG_SCAN_RATE_LIMIT = 10;
@@ -26,7 +26,7 @@ const FMG_SCAN_CACHE_TTL = 900;
 const FMG_SCAN_MAX_BYTES = 2097152;
 
 /** User agent the scanner identifies itself with. */
-const FMG_SCAN_UA = 'FernwellReadabilityBot/1.0 (+https://fernwellmedia.com/scan)';
+const FMG_SCAN_UA = 'FernwellReadabilityBot/1.0 (+https://fernwellgroup.com/scan)';
 
 /*
 |--------------------------------------------------------------------------
@@ -72,7 +72,7 @@ function fmg_scan_handle_request( $request ) {
 		return $url;
 	}
 
-	$cache_key = 'fmg_scan_' . md5( $url );
+	$cache_key = 'fmg_scan_v2_' . md5( $url );
 	$cached    = get_transient( $cache_key );
 	if ( is_array( $cached ) ) {
 		$cached['cached'] = true;
@@ -335,14 +335,49 @@ function fmg_scan_run( $url ) {
 		'hops'     => $page['hops'],
 	);
 
-	$categories = array(
+	// Two independently scored axes: can an engine READ you, and is the page
+	// shaped to be CITED. Each normalizes to its own 0-100 dial, so the
+	// readability number is unchanged by anything on the citability side.
+	$readability = array(
 		'entity'         => fmg_scan_check_entity( $ctx ),
 		'extractability' => fmg_scan_check_extractability( $ctx ),
 		'access'         => fmg_scan_check_access( $ctx ),
 		'structure'      => fmg_scan_check_structure( $ctx ),
 		'freshness'      => fmg_scan_check_freshness( $ctx ),
 	);
+	$citability = array(
+		'citability' => fmg_scan_check_citability( $ctx ),
+	);
 
+	$read_score = fmg_scan_tally( $readability );
+	$cite_score = fmg_scan_tally( $citability );
+
+	return array(
+		'url'         => $final,
+		'host'        => $parts['host'],
+		'readability' => array(
+			'score'      => $read_score,
+			'band'       => fmg_scan_band( $read_score ),
+			'categories' => $readability,
+		),
+		'citability'  => array(
+			'score'      => $cite_score,
+			'band'       => fmg_scan_cite_band( $cite_score ),
+			'categories' => $citability,
+		),
+		'scanned_at'  => gmdate( 'Y-m-d H:i' ) . ' UTC',
+		'cached'      => false,
+	);
+}
+
+/**
+ * Sum a category group's earned points and normalize to 0-100.
+ * Mutates each category to carry its own 'earned' total.
+ *
+ * @param array $categories Category group, by reference.
+ * @return int
+ */
+function fmg_scan_tally( &$categories ) {
 	$score = 0;
 	$max   = 0;
 	foreach ( $categories as $key => $cat ) {
@@ -354,18 +389,7 @@ function fmg_scan_run( $url ) {
 		$score                       += $earned;
 		$max                         += $cat['max'];
 	}
-
-	$score = (int) round( ( $score / max( 1, $max ) ) * 100 );
-
-	return array(
-		'url'        => $final,
-		'host'       => $parts['host'],
-		'score'      => $score,
-		'band'       => fmg_scan_band( $score ),
-		'categories' => $categories,
-		'scanned_at' => gmdate( 'Y-m-d H:i' ) . ' UTC',
-		'cached'     => false,
-	);
+	return (int) round( ( $score / max( 1, $max ) ) * 100 );
 }
 
 /**
@@ -393,6 +417,34 @@ function fmg_scan_band( $score ) {
 		'label'   => 'Hard to read',
 		'key'     => 'invisible',
 		'summary' => 'An AI engine reading this page comes away without a clear picture of who you are or what you claim. That is a fixable problem, and it is where most sites start.',
+	);
+}
+
+/**
+ * Band a citability score.
+ *
+ * @param int $score Score.
+ * @return array
+ */
+function fmg_scan_cite_band( $score ) {
+	if ( $score >= 70 ) {
+		return array(
+			'label'   => 'Citable',
+			'key'     => 'citable',
+			'summary' => 'This page hands an engine a name to credit and claims worth lifting. That is the raw material of a citation. Whether engines actually reach for it is what the audit measures.',
+		);
+	}
+	if ( $score >= 40 ) {
+		return array(
+			'label'   => 'Thin',
+			'key'     => 'thin',
+			'summary' => 'An engine can read this page but has little reason to name you over a more established source. The gaps below are where the citation goes to someone else.',
+		);
+	}
+	return array(
+		'label'   => 'Anonymous',
+		'key'     => 'anonymous',
+		'summary' => 'No author to credit, and few sourced or self-contained claims to quote. Readable, but nothing an engine would attribute to you by name.',
 	);
 }
 
@@ -820,7 +872,19 @@ function fmg_scan_check_structure( $ctx ) {
 	$desc     = fmg_scan_meta( $ctx, 'description', 'name' );
 	$desc_len = strlen( $desc );
 
-	$qa = fmg_scan_find_type( $ctx['jsonld'], array( 'FAQPage', 'QAPage', 'Article', 'BlogPosting', 'HowTo', 'Service', 'Product' ) );
+	$qa = fmg_scan_find_type(
+		$ctx['jsonld'],
+		array(
+			// Generic content types.
+			'FAQPage', 'QAPage', 'Article', 'BlogPosting', 'HowTo', 'Service', 'Product',
+			// Medical content types: a health page declaring what kind of answer
+			// it holds. Counted for citability already; credited here too so
+			// medical sites are not penalised for using the correct schema.
+			'MedicalWebPage', 'MedicalCondition', 'MedicalScholarlyArticle', 'MedicalGuideline', 'Drug',
+			// Dataset: research/data pages (e.g. a DOI-anchored dataset).
+			'Dataset',
+		)
+	);
 
 	$checks = array(
 		fmg_scan_check(
@@ -852,7 +916,7 @@ function fmg_scan_check_structure( $ctx ) {
 			'Content-level schema',
 			(bool) $qa,
 			6,
-			'Add FAQPage, Article, or Service schema so the page declares what kind of answer it holds, not just that it exists.',
+			'Add content-level schema (FAQPage, Article, MedicalWebPage, Dataset, etc.) so the page declares what kind of answer it holds, not just that it exists.',
 			$qa ? 'Found ' . implode( '/', (array) $qa['@type'] ) : 'None found'
 		),
 	);
@@ -911,6 +975,156 @@ function fmg_scan_check_freshness( $ctx ) {
 		'max'    => 10,
 		'checks' => $checks,
 	);
+}
+
+/**
+ * Citability: is the page shaped to be quoted and attributed.
+ *
+ * This is the on-page raw material of a citation, measured deterministically
+ * from the served HTML. It does NOT test whether engines actually cite the
+ * site (that is off-page and non-deterministic — the paid audit). Weights sum
+ * to 100 so this category is its own 0-100 dial.
+ *
+ * @param array $ctx Context.
+ * @return array
+ */
+function fmg_scan_check_citability( $ctx ) {
+	$nodes = $ctx['jsonld'];
+	$body  = fmg_scan_body_text( $ctx );
+
+	// 1. Attribution: a name a citation could point to.
+	$author_in_schema = false;
+	foreach ( $nodes as $node ) {
+		if ( ! empty( $node['author'] ) ) {
+			$author_in_schema = true;
+			break;
+		}
+	}
+	$person = fmg_scan_find_type( $nodes, array( 'Person' ) );
+	$byline = false;
+	if ( $ctx['xpath'] ) {
+		$q = $ctx['xpath']->query(
+			'//*[@rel="author" or @itemprop="author"]'
+			. ' | //*[contains(concat(" ", normalize-space(@class), " "), " author ")]'
+			. ' | //*[contains(concat(" ", normalize-space(@class), " "), " byline ")]'
+		);
+		$byline = $q && $q->length > 0;
+	}
+	$has_attribution = $author_in_schema || (bool) $person || $byline;
+	$attr_detail     = $author_in_schema ? 'Author named in structured data'
+		: ( $person ? 'Person markup present'
+		: ( $byline ? 'Byline found in page markup' : 'No author or byline found' ) );
+
+	// 2. Expertise / E-E-A-T signals.
+	$expertise_schema = false;
+	foreach ( $nodes as $node ) {
+		if ( ! empty( $node['reviewedBy'] ) || ! empty( $node['hasCredential'] )
+			|| ( isset( $node['author']['jobTitle'] ) && '' !== $node['author']['jobTitle'] ) ) {
+			$expertise_schema = true;
+			break;
+		}
+	}
+	$med            = fmg_scan_find_type( $nodes, array( 'MedicalWebPage', 'MedicalScholarlyArticle' ) );
+	$expertise_text = (bool) preg_match( '/\b(medically reviewed|reviewed by|fact[- ]checked|board[- ]certified|Ph\.?\s?D|M\.?\s?D\.?|M\.?Sc|R\.?N\.?)\b/i', $body );
+	$has_expertise  = $expertise_schema || (bool) $med || $expertise_text;
+	$exp_detail     = $expertise_schema ? 'Credentials or reviewer in structured data'
+		: ( $med ? 'Medical content markup present'
+		: ( $expertise_text ? 'Credential or review language on the page' : 'No expertise or review signals found' ) );
+
+	// 3. Quotable-claim density: self-contained sentences an engine could lift.
+	$sentences = preg_split( '/(?<=[.!?])\s+/', $body );
+	$quotable  = 0;
+	foreach ( (array) $sentences as $sentence ) {
+		$sentence = trim( $sentence );
+		// Count digit-bearing tokens as words so numeric/dated claims (exactly the
+		// citable ones) are not undercounted against the length window.
+		$wc       = str_word_count( $sentence, 0, '0123456789' );
+		if ( $wc < 8 || $wc > 34 || '?' === substr( $sentence, -1 ) ) {
+			continue;
+		}
+		if ( preg_match( '/\d/', $sentence )
+			|| preg_match( '/\b(is|are|was|were|causes?|affects?|means?|includes?|requires?|provides?|refers to|results? in)\b/i', $sentence ) ) {
+			$quotable++;
+		}
+	}
+	$has_quotable = $quotable >= 5;
+
+	// 4. Sourced claims: outbound links to authoritative sources.
+	$origin_host = (string) wp_parse_url( $ctx['origin'], PHP_URL_HOST );
+	$sources     = 0;
+	if ( $ctx['xpath'] ) {
+		foreach ( $ctx['xpath']->query( '//a[@href]' ) as $a ) {
+			$host = (string) wp_parse_url( $a->getAttribute( 'href' ), PHP_URL_HOST );
+			if ( '' === $host || 0 === strcasecmp( $host, $origin_host ) ) {
+				continue;
+			}
+			if ( preg_match( '/(\.gov|\.edu|\.ac\.uk|doi\.org|ncbi\.nlm\.nih\.gov|pubmed|nih\.gov|who\.int|wikipedia\.org|orcid\.org)/i', $host ) ) {
+				$sources++;
+			}
+		}
+	}
+	$has_sources = $sources >= 1;
+
+	$checks = array(
+		fmg_scan_check(
+			'cite_attribution',
+			'A name a citation can point to',
+			$has_attribution,
+			30,
+			'Name an author or the organization on the page and in schema (author, Person, or a visible byline). Engines attribute to a name; with none, they paraphrase you away.',
+			$attr_detail
+		),
+		fmg_scan_check(
+			'cite_expertise',
+			'Signals of who is qualified to say it',
+			$has_expertise,
+			25,
+			'Show expertise the way engines weigh it: author credentials, a named reviewer, or medical/editorial review markup. In regulated topics this is decisive.',
+			$exp_detail
+		),
+		fmg_scan_check(
+			'cite_quotable',
+			'Self-contained, quotable claims',
+			$has_quotable,
+			25,
+			'Write more sentences that stand alone as a fact an engine could lift verbatim. Definitions and specific, dated, numeric claims travel; hedged marketing prose does not.',
+			$quotable . ' quotable claim(s) detected'
+		),
+		fmg_scan_check(
+			'cite_sources',
+			'Claims backed by authoritative sources',
+			$has_sources,
+			20,
+			'Link the claims that matter to primary or authoritative sources (.gov, .edu, journals, DOIs). Pages that cite tend to get cited.',
+			$sources . ' authoritative source link(s)'
+		),
+	);
+
+	return array(
+		'label'  => 'Citability',
+		'blurb'  => 'Whether the page gives an engine a name to credit and claims worth quoting: the on-page raw material of a citation. The live "does it actually get cited" test is the audit.',
+		'max'    => 100,
+		'checks' => $checks,
+	);
+}
+
+/**
+ * Extract visible body text with script/style/noscript stripped.
+ *
+ * @param array $ctx Context.
+ * @return string
+ */
+function fmg_scan_body_text( $ctx ) {
+	if ( ! $ctx['dom'] ) {
+		return '';
+	}
+	$clone = clone $ctx['dom'];
+	$xp    = new DOMXPath( $clone );
+	foreach ( $xp->query( '//script | //style | //noscript' ) as $node ) {
+		$node->parentNode->removeChild( $node );
+	}
+	$body = $clone->getElementsByTagName( 'body' )->item( 0 );
+	return $body ? trim( preg_replace( '/\s+/', ' ', $body->textContent ) ) : '';
 }
 
 /**
@@ -1002,7 +1216,8 @@ function fmg_scan_shortcode() {
 			</div>
 			<p class="fmg-scan__note">
 				One page, read the way an AI crawler reads it. No account, no email required.
-				This measures whether engines <em>can</em> read you, which is the first half of being cited.
+				You get two scores: whether engines <em>can</em> read you, and whether your page is
+				shaped to be <em>cited</em>. The live test of who actually gets named is the audit.
 			</p>
 		</form>
 		<div class="fmg-scan__status" role="status" aria-live="polite"></div>
@@ -1071,6 +1286,11 @@ function fmg_scan_css() {
   font-size: 2.7rem; font-weight: 700; letter-spacing: -.03em; color: var(--fmg-apricot);
 }
 .fmg-score__copy { flex: 1 1 300px; min-width: 240px; }
+.fmg-score__eyebrow {
+  margin: 0 0 6px; font-size: .72rem; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--fmg-apricot);
+}
+.fmg-cats + .fmg-score { margin-top: 30px; }
 .fmg-score__band { font-size: 1.45rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 8px; }
 .fmg-score__summary { margin: 0; color: var(--fmg-dark-text); font-size: 1rem; }
 .fmg-score__meta { margin: 14px 0 0; font-size: .8rem; color: rgba(255,255,255,.5); word-break: break-word; }
@@ -1185,29 +1405,31 @@ function fmg_scan_js() {
     status.setAttribute('data-state', state || '');
   }
 
-  function render(data) {
+  function scoreCard(group, eyebrow, meta) {
     var C = 2 * Math.PI * 58;
-    var offset = C - (C * data.score) / 100;
-
-    var html = ''
-      + '<div class="fmg-score">'
+    var offset = C - (C * group.score) / 100;
+    return '<div class="fmg-score">'
       + '<div class="fmg-score__dial">'
       + '<svg viewBox="0 0 132 132" aria-hidden="true">'
       + '<circle class="fmg-score__track" cx="66" cy="66" r="58" fill="none" stroke-width="9"></circle>'
       + '<circle class="fmg-score__arc" cx="66" cy="66" r="58" fill="none" stroke-width="9" '
-      + 'stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '"></circle>'
+      + 'stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" data-offset="' + offset + '"></circle>'
       + '</svg>'
-      + '<div class="fmg-score__num">' + data.score + '</div>'
+      + '<div class="fmg-score__num">' + group.score + '</div>'
       + '</div>'
       + '<div class="fmg-score__copy">'
-      + '<p class="fmg-score__band">' + esc(data.band.label) + '<span class="sr-only"> AI Readability Score</span></p>'
-      + '<p class="fmg-score__summary">' + esc(data.band.summary) + '</p>'
-      + '<p class="fmg-score__meta">' + esc(data.url) + ' &middot; scanned ' + esc(data.scanned_at) + '</p>'
+      + '<p class="fmg-score__eyebrow">' + esc(eyebrow) + '</p>'
+      + '<p class="fmg-score__band">' + esc(group.band.label)
+      + '<span class="sr-only"> ' + esc(eyebrow) + ' score, ' + group.score + ' out of 100</span></p>'
+      + '<p class="fmg-score__summary">' + esc(group.band.summary) + '</p>'
+      + (meta ? '<p class="fmg-score__meta">' + meta + '</p>' : '')
       + '</div></div>';
+  }
 
-    html += '<div class="fmg-cats">';
-    Object.keys(data.categories).forEach(function (key) {
-      var cat = data.categories[key];
+  function catsHtml(categories) {
+    var html = '<div class="fmg-cats">';
+    Object.keys(categories).forEach(function (key) {
+      var cat = categories[key];
       var pct = Math.round((cat.earned / cat.max) * 100);
       html += '<section class="fmg-cat">'
         + '<div class="fmg-cat__head"><h3 class="fmg-cat__name">' + esc(cat.label) + '</h3>'
@@ -1226,13 +1448,22 @@ function fmg_scan_js() {
       });
       html += '</ul></section>';
     });
-    html += '</div>';
+    return html + '</div>';
+  }
+
+  function render(data) {
+    var meta = esc(data.url) + ' &middot; scanned ' + esc(data.scanned_at);
+    var html = scoreCard(data.readability, 'Readability', meta)
+      + catsHtml(data.readability.categories)
+      + scoreCard(data.citability, 'Citability', '')
+      + catsHtml(data.citability.categories);
 
     html += ''
       + '<div class="fmg-cta">'
-      + '<h3>This is the half a crawler can see.</h3>'
-      + '<p>A readability score tells you whether AI engines <em>can</em> read your site. Whether they actually name you when '
-      + 'a buyer asks is measured differently: real questions, run across the top engines, scored against your competitors. '
+      + '<h3>Two scores a crawler can see. One it cannot.</h3>'
+      + '<p>Readability says engines <em>can</em> read you. Citability says your page is <em>shaped</em> to be '
+      + 'quoted. Whether an engine actually names you when a buyer asks is the third thing, and it is measured '
+      + 'differently: real questions, run across the top engines, scored against your competitors. '
       + 'Send us this result and we will tell you what it means for your market.</p>'
       + '<div class="fmg-cta__actions">'
       + '<a class="fmg-cta__btn" id="fmg-mailto" href="#">Send these results to Fernwell</a>'
@@ -1245,36 +1476,43 @@ function fmg_scan_js() {
     results.hidden = false;
 
     requestAnimationFrame(function () {
-      var arc = results.querySelector('.fmg-score__arc');
-      if (arc) arc.style.strokeDashoffset = offset;
+      results.querySelectorAll('.fmg-score__arc').forEach(function (arc) {
+        arc.style.strokeDashoffset = arc.getAttribute('data-offset');
+      });
       results.querySelectorAll('.fmg-cat__fill').forEach(function (el) {
         el.style.width = el.getAttribute('data-pct') + '%';
       });
     });
 
     wireActions(data);
-    results.querySelector('.fmg-score__band').setAttribute('tabindex', '-1');
-    results.querySelector('.fmg-score__band').focus();
+    var band = results.querySelector('.fmg-score__band');
+    band.setAttribute('tabindex', '-1');
+    band.focus();
   }
 
   function summarize(data) {
     var lines = [];
-    lines.push('AI Readability Score: ' + data.score + '/100 (' + data.band.label + ')');
+    lines.push('AI Readability Score: ' + data.readability.score + '/100 (' + data.readability.band.label + ')');
+    lines.push('AI Citability Score: ' + data.citability.score + '/100 (' + data.citability.band.label + ')');
     lines.push('Site: ' + data.url);
     lines.push('Scanned: ' + data.scanned_at);
     lines.push('');
 
-    var scores = [];
     var failed = [];
-    Object.keys(data.categories).forEach(function (key) {
-      var cat = data.categories[key];
-      scores.push(cat.label + ' ' + cat.earned + '/' + cat.max);
-      cat.checks.forEach(function (c) {
-        if (!c.pass) failed.push('- ' + cat.label + ': ' + c.label + (c.detail ? ' (' + c.detail + ')' : ''));
+    function group(label, axis) {
+      var scores = [];
+      Object.keys(axis.categories).forEach(function (key) {
+        var cat = axis.categories[key];
+        scores.push(cat.label + ' ' + cat.earned + '/' + cat.max);
+        cat.checks.forEach(function (c) {
+          if (!c.pass) failed.push('- ' + cat.label + ': ' + c.label + (c.detail ? ' (' + c.detail + ')' : ''));
+        });
       });
-    });
+      lines.push(label + ' categories: ' + scores.join(' | '));
+    }
+    group('Readability', data.readability);
+    group('Citability', data.citability);
 
-    lines.push('Category scores: ' + scores.join(' | '));
     lines.push('');
     if (failed.length) {
       lines.push('Failed checks (' + failed.length + '):');
@@ -1295,7 +1533,7 @@ function fmg_scan_js() {
 
   function wireActions(data) {
     var body = summarize(data);
-    var subject = 'AI Readability Score: ' + data.score + '/100 for ' + data.host;
+    var subject = 'AI Visibility: ' + data.readability.score + ' readable / ' + data.citability.score + ' citable for ' + data.host;
     var mailto = 'mailto:' + window.FMG_SCAN.contact
       + '?subject=' + encodeURIComponent(subject)
       + '&body=' + encodeURIComponent(body);

@@ -23,7 +23,7 @@ get_header();
     </header>
     <div class="entry-content">
 
-      <p>Protecting your privacy is a priority at Fernwell Media Group ("Fernwell," "we," "us," or "our"). This Privacy Policy applies to fernwellmedia.com and governs data collection and usage. By using this site, you consent to the data practices described in this statement. This policy should be read together with our <a href="/terms-of-service/">Terms of Service</a> and <a href="/cookie-policy/">Cookie Policy</a>.</p>
+      <p>Protecting your privacy is a priority at Fernwell Media Group ("Fernwell," "we," "us," or "our"). This Privacy Policy applies to fernwellgroup.com and governs data collection and usage. By using this site, you consent to the data practices described in this statement. This policy should be read together with our <a href="/terms-of-service/">Terms of Service</a> and <a href="/cookie-policy/">Cookie Policy</a>.</p>
 
       <h2>Collection of Personal Information</h2>
       <p>This site does not require accounts and does not ask visitors to register. We collect personal information only when you voluntarily provide it, such as when you email us at the address published on this site. In that case we receive your email address, your name if you include it, and the contents of your message.</p>
@@ -50,7 +50,7 @@ get_header();
       <p>We take reasonable measures to protect the information we hold, including using reputable hosting with current security practices and limiting access to correspondence. No method of transmission or storage is completely secure, and we cannot guarantee absolute security.</p>
 
       <h2>Right to Deletion</h2>
-      <p>Subject to certain exceptions provided by law, on receipt of a verifiable request we will delete personal information we hold about you and direct any service providers to do the same. To make a request, email <a href="mailto:hello@fernwellmedia.com">hello@fernwellmedia.com</a>. We may decline a deletion request where the information is necessary to complete an engagement you requested, detect or protect against security incidents or illegal activity, or comply with a legal obligation.</p>
+      <p>Subject to certain exceptions provided by law, on receipt of a verifiable request we will delete personal information we hold about you and direct any service providers to do the same. To make a request, email <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a>. We may decline a deletion request where the information is necessary to complete an engagement you requested, detect or protect against security incidents or illegal activity, or comply with a legal obligation.</p>
 
       <h2>Children Under Thirteen</h2>
       <p>This site is a business consultancy and is not directed at children. We do not knowingly collect personal information from children under the age of thirteen. If you believe a child has provided us personal information, contact us and we will delete it.</p>
@@ -65,7 +65,7 @@ get_header();
       <p>We reserve the right to change this Privacy Policy from time to time. The current version will always be posted at this page with its effective date, and material changes will be noted plainly. Continued use of the site after changes constitutes acceptance.</p>
 
       <h2>Contact Information</h2>
-      <p>Fernwell welcomes questions or comments regarding this policy at <a href="mailto:hello@fernwellmedia.com">hello@fernwellmedia.com</a>.</p>
+      <p>Fernwell welcomes questions or comments regarding this policy at <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a>.</p>
 
     </div>
   </div>

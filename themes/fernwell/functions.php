@@ -130,6 +130,21 @@ function fernwell_llms_serve() {
 add_action( 'template_redirect', 'fernwell_llms_serve' );
 
 /**
+ * Let /llms.txt bypass the Password Protected gate so AI crawlers can always
+ * read it, even while the rest of the site is private during the build.
+ * Scoped to the exact llms.txt path only; every other URL stays gated.
+ * No effect when the Password Protected plugin is inactive.
+ */
+function fernwell_llms_public( $is_active ) {
+	$path = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
+	if ( is_string( $path ) && untrailingslashit( $path ) === '/llms.txt' ) {
+		return false;
+	}
+	return $is_active;
+}
+add_filter( 'password_protected_is_active', 'fernwell_llms_public' );
+
+/**
  * Structured data: one connected graph, every node cross-referenced by @id.
  *
  * Sitewide: ProfessionalService (#org), Person (#kenneth), WebSite (#website),
@@ -177,7 +192,7 @@ function fernwell_schema() {
 			'url'           => $base,
 			'founder'       => array( '@id' => $base . '#kenneth' ),
 			'areaServed'    => 'United States',
-			'email'         => 'mailto:hello@fernwellmedia.com',
+			'email'         => 'mailto:hello@fernwellgroup.com',
 			'knowsAbout'    => array(
 				'Answer Engine Optimization',
 				'Generative Engine Optimization',
@@ -193,7 +208,7 @@ function fernwell_schema() {
 			'jobTitle'    => 'Founder, Answer Engine Optimization Consultant',
 			'description' => 'Communications systems and knowledge infrastructure specialist. Founder of Fernwell Media Group, an independent AEO consultancy.',
 			'url'         => $base . 'about/',
-			'email'       => 'mailto:hello@fernwellmedia.com',
+			'email'       => 'mailto:hello@fernwellgroup.com',
 			'worksFor'    => array( '@id' => $base . '#org' ),
 			'knowsAbout'  => array(
 				'Answer Engine Optimization',

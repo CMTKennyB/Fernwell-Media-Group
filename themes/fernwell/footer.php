@@ -24,7 +24,7 @@
       <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>">Privacy</a> &middot;
       <a href="<?php echo esc_url( home_url( '/terms-of-service/' ) ); ?>">Terms</a> &middot;
       <a href="<?php echo esc_url( home_url( '/cookie-policy/' ) ); ?>">Cookies</a> &middot;
-      <a href="mailto:hello@fernwellmedia.com">hello@fernwellmedia.com</a> &middot;
+      <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a> &middot;
       <a href="https://www.linkedin.com/in/kenny-raymond/">LinkedIn</a>
     </div>
   </div>

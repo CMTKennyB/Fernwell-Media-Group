@@ -174,7 +174,7 @@ get_header();
       </div>
       <h3>Find out what AI says about your business.</h3>
       <p>Send your site and your three biggest competitors. You'll get back a free spot-check of one question your customers are asking AI right now.</p>
-      <a class="btn primary" href="mailto:hello@fernwellmedia.com?subject=AI%20Visibility%20Spot-Check">Email for a free spot-check</a>
+      <a class="btn primary" href="mailto:hello@fernwellgroup.com?subject=AI%20Visibility%20Spot-Check">Email for a free spot-check</a>
     </div>
   </div>
 </section>

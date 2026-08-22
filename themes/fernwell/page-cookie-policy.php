@@ -23,7 +23,7 @@ get_header();
     </header>
     <div class="entry-content">
 
-      <p>This Cookie Policy explains how Fernwell Media Group ("Fernwell," "we," "us," or "our") uses cookies on fernwellmedia.com. It should be read together with our <a href="/privacy-policy/">Privacy Policy</a> and <a href="/terms-of-service/">Terms of Service</a>.</p>
+      <p>This Cookie Policy explains how Fernwell Media Group ("Fernwell," "we," "us," or "our") uses cookies on fernwellgroup.com. It should be read together with our <a href="/privacy-policy/">Privacy Policy</a> and <a href="/terms-of-service/">Terms of Service</a>.</p>
 
       <h2>What Are Cookies?</h2>
       <p>Cookies are small text files placed on your device by a website. They allow a site to recognize your device and remember information about your visit. Cookies do not run programs or deliver viruses; they are passive data files. Cookies are commonly grouped into categories: Essential cookies required for a site to operate, Functional cookies that enable enhanced features, Analytics cookies that provide usage insights, and Third-Party cookies set by external services.</p>
@@ -44,7 +44,7 @@ get_header();
       <p>We may update this policy from time to time. The current version will always be posted at this page with its effective date, and material changes, such as the introduction of any new cookie category, will be noted plainly.</p>
 
       <h2>Contact Information</h2>
-      <p>Questions about this policy may be directed to <a href="mailto:hello@fernwellmedia.com">hello@fernwellmedia.com</a>.</p>
+      <p>Questions about this policy may be directed to <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a>.</p>
 
     </div>
   </div>
