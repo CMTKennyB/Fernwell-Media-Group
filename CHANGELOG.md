@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Schema: the organization now lists its GitHub repository in sameAs, and the
+  founder's URL points to the homepage About section instead of a page that
+  never existed.
+
 ## [1.1.0] - 2026-08-22
 
 ### Added
