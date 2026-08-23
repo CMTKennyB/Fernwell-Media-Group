@@ -5,11 +5,107 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-08-23
+
+### Added
+
+- **Fernwell Answers**: the site's blog, live at `/answers/`. The listing page
+  carries the "Fernwell Answers:" wordmark; each post is a question as its H1
+  with the direct answer as the opening paragraph. Single posts get a kicker
+  linking back to the listing, a larger lede paragraph, and a closing
+  scan/audit call-to-action card. New nav and footer links to Answers.
+- **Answers wiring**: posts live under the `/answers/` permalink base with the
+  Answers page as the posts page; the listing page titles as "Fernwell
+  Answers" and single posts carry "Fernwell Answers" as the title-tag suffix.
+- **Schema: Blog node**: the Answers surfaces add a Blog node named Fernwell
+  Answers to the graph; Article nodes anchor to it via isPartOf, and post
+  breadcrumbs gain a Fernwell Answers level (Home > Fernwell Answers > post).
+- **Reading time**: posts show an approximate reading time (200 words per
+  minute) in the single-post byline and on the Answers listing.
+- **Search & Social metabox**: posts get a native metabox (no SEO plugin, no
+  ACF) for per-post overrides of what the theme already emits: SEO title,
+  meta description, canonical URL, social image (media-library picker), and
+  a noindex toggle. Character counters on title (60) and description (155).
+  Overrides flow into the title tag, meta description, OG/Twitter tags,
+  rel=canonical, robots, and the Article schema abstract. New files:
+  `inc/post-meta.php`, `assets/js/admin-meta.js`.
+- **Schema: richer Article nodes**: posts now carry wordCount, timeRequired
+  (matching the visible reading time), and description/abstract (from the
+  meta description override or the excerpt).
+- **Editor typography**: the block editor mirrors the front-end entry
+  typography (fonts, sizes, colors, list indents, content width) via
+  `assets/css/editor.css`, so posts are written in the type they publish in.
+- **Post navigation**: every post ends with a Previous / All answers / Next
+  button row. The "All answers" button remembers the reader's place: opening
+  a post from the listing stores which page and item they left from
+  (sessionStorage), and the button returns them to that exact spot, with the
+  item's title highlighted. Direct visitors get the plain listing link.
+  New file: `assets/js/answers-nav.js`.
+- **Front page: Fernwell Answers strip**: the three latest answers render as
+  cards between About and Contact, with the wordmark heading and an "All
+  answers" link. Contact flips from alt to plain so section alternation
+  holds.
+- **llms.txt: dynamic answers listing**: the served file now includes a
+  "## Fernwell Answers" section naming every published answer with its URL
+  and one-line summary, generated at request time so it never goes stale.
+- **Schema: Blog/Article linking + speakable**: the Blog node enumerates
+  every published Article via blogPost, and each Article carries a
+  SpeakableSpecification pointing at the question H1 and the answer lede.
+- **Share card: Fernwell Answers default**: posts and the Answers listing
+  fall back to a section-branded og:image (`assets/og-card-answers.png`,
+  generated in the FMG card's design language; replace the file to
+  redesign). Per-post social images still override it.
+- **Metabox: live share preview**: the Search & Social box shows a
+  Yoast-style card preview (image, site, title with the Fernwell Answers
+  suffix, description) that updates as you type and follows the social
+  image field.
+- **404 as re-entry point**: destination buttons
+  (homepage, free scan, Fernwell Answers) plus a "Latest answers" card
+  strip, so a dead URL always offers a way back in.
+- **Comments and pingbacks off in code**: comments_open and pings_open are
+  hard-false at the theme level, so production can't drift open regardless
+  of discussion settings.
+- **First post**: "Why does AI recommend my competitors instead of me?"
+
 ### Changed
 
+- **No WordPress archives**: date, category, and tag archives 301 to the
+  Fernwell Answers listing (author archives already redirect home), and the
+  taxonomy sitemaps are gone; the core sitemap now lists only posts and
+  pages. Archive pages are thin, uncited, and unused here.
+- **Hardening: users sitemap removed** (`fmg-hardening.php`): the core
+  wp-sitemap users provider leaked the author slug even with the REST users
+  endpoint gated and author archives redirected. Enumeration is now closed
+  on all three doors.
+- **Hardening: author slug scrubbed everywhere** (`fmg-hardening.php`):
+  `?author=N` no longer canonical-redirects through `/author/{slug}/` (the
+  Location header leaked the slug before the redirect-home ran), and oEmbed
+  responses drop their author_name and slug-based author_url fields.
+- **No tags on posts**: the post_tag taxonomy is unregistered from posts.
+  Categories stay for organizing the answer set.
+- **Feeds credit the public byline**: dc:creator in feeds now says Kenneth
+  Raymond, matching the visible byline, instead of the account display name.
+- **Footer: LinkedIn link removed.** The schema Person node keeps its sameAs
+  reference (machine-side entity corroboration, not a visible link).
+- **Social image alt text**: og:image:alt and twitter:image:alt now emit on
+  every page, describing whichever card serves (FMG default, Fernwell
+  Answers, or a per-post image, which uses the attachment's media-library
+  alt text and falls back to the post title).
+- **Blog accessibility pass**: prev/next buttons announce their destination
+  title to screen readers, arrow glyphs and separator dots are hidden from
+  assistive tech, and the returning-reader highlight on the listing adds an
+  underline so it never relies on color alone. All text/background token
+  pairs verified at 5.6:1 contrast or better (WCAG AA floor is 4.5:1).
+- **Blog mobile pass**: below 480px the post navigation restacks (Previous
+  and Next side by side, All answers full-width beneath); long unbroken
+  strings can no longer overflow post content; listing pagination is styled
+  for when the answer set outgrows one page. Verified at 375px: no
+  horizontal overflow, all tap targets 48px or taller.
 - Schema: the organization now lists its GitHub repository in sameAs, and the
   founder's URL points to the homepage About section instead of a page that
   never existed.
+- llms.txt: the Answers entry now reads "Fernwell Answers" with the section's
+  new description.
 
 ## [1.1.0] - 2026-08-22
 
