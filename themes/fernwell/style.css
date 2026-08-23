@@ -4,7 +4,7 @@ Theme URI: https://fernwellgroup.com/
 Author: Fernwell Media Group
 Author URI: https://fernwellgroup.com/
 Description: Custom theme for Fernwell Media Group, an independent Answer Engine Optimization consultancy. Grove palette: stone paper, deep green, apricot accents. Built AEO-first with structured data and answer-first layout.
-Version: 1.1.0
+Version: 2.0.0
 Requires at least: 6.0
 Requires PHP: 7.4
 License: GNU General Public License v2 or later
@@ -57,6 +57,9 @@ body {
 h1, h2, h3 { font-family: var(--font-display); }
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
 a { color: var(--accent); }
+
+/* Site-wide breathing room: content never sits against the footer. */
+main#main { padding-bottom: 100px; }
 
 /* Header */
 header.site {
@@ -212,17 +215,69 @@ footer.site a { color: var(--ink-soft); }
 .answer-item .meta { font-size: .82rem; color: var(--ink-soft); margin-top: 6px; text-transform: uppercase; letter-spacing: .08em; }
 .answer-item .excerpt { color: var(--ink-soft); margin-top: 10px; }
 
+/* Fernwell Answers strip (front page + 404 re-entry) */
+.answers-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 28px; }
+.answers-strip__item {
+  display: block; background: var(--paper); border: 1px solid var(--line);
+  border-radius: 14px; padding: 22px 24px; text-decoration: none;
+}
+.answers-strip__item:hover { border-color: var(--accent); }
+.answers-strip__item h3 { font-size: 1.1rem; letter-spacing: -0.01em; color: var(--ink); }
+.answers-strip__item .meta { display: block; margin-top: 10px; font-size: .78rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; }
+.answers-strip__all { margin-top: 24px; }
+@media (max-width: 880px) { .answers-strip { grid-template-columns: 1fr; } }
+
+/* 404 re-entry */
+.reentry-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 24px 0; }
+.reentry-answers { margin-top: 64px; max-width: 960px; }
+.reentry-answers h2 { font-size: 1.4rem; letter-spacing: -0.01em; }
+
 /* Single post / page */
 .entry { padding: 84px 0 90px; }
 .entry-header h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); letter-spacing: -0.02em; max-width: 800px; }
 .entry-header .meta { font-size: .85rem; color: var(--ink-soft); margin-top: 12px; }
-.entry-content { margin-top: 34px; max-width: 720px; }
+.entry-content { margin-top: 34px; max-width: 720px; overflow-wrap: break-word; }
 .entry-content p, .entry-content ul, .entry-content ol { margin-bottom: 18px; color: var(--ink); }
+.entry-content ul, .entry-content ol { padding-left: 36px; }
+.entry-content li { margin-bottom: 10px; }
 .entry-content h2 { margin: 34px 0 12px; font-size: 1.5rem; }
 .entry-content h3 { margin: 26px 0 10px; font-size: 1.2rem; }
 .entry-content blockquote { border-left: 4px solid var(--accent); padding: 10px 22px; background: var(--paper-alt); border-radius: 0 10px 10px 0; margin-bottom: 18px; }
 .entry-content img { max-width: 100%; height: auto; border-radius: 10px; }
 .entry-content a { color: var(--accent); }
+.entry-header .kicker {
+  display: inline-block; font-family: var(--font-display); font-weight: 600;
+  font-size: .88rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent); text-decoration: none; margin-bottom: 14px;
+}
+.entry-header .kicker:hover { color: var(--accent-hover); }
+.entry-content > p:first-child { font-size: 1.16rem; line-height: 1.6; }
+.post-cta {
+  margin-top: 56px; max-width: 720px;
+  background: var(--paper-alt); border: 1px solid var(--line);
+  border-radius: 14px; padding: 32px 34px;
+}
+.post-cta h2 { font-size: 1.4rem; letter-spacing: -0.01em; }
+.post-cta p { color: var(--ink-soft); margin-top: 8px; max-width: 560px; }
+.post-cta .actions { margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap; }
+.post-nav {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  gap: 12px; max-width: 720px; margin-top: 100px;
+}
+.post-nav__prev { justify-self: start; }
+.post-nav__next { justify-self: end; }
+.answer-item:target h2 a { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+
+/* Listing pagination (appears once the answer set outgrows one page). */
+.answers-list .navigation.pagination { margin-top: 44px; max-width: 760px; }
+.answers-list .nav-links { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.answers-list .page-numbers {
+  display: inline-block; padding: 9px 15px; border: 1px solid var(--line);
+  border-radius: 8px; text-decoration: none; color: var(--ink); font-weight: 600;
+}
+.answers-list a.page-numbers:hover { border-color: var(--ink-soft); }
+.answers-list .page-numbers.current { background: var(--accent); border-color: var(--accent); color: #fff; }
+.answers-list .page-numbers.dots { border: 0; }
 
 /* Accessibility */
 .screen-reader-text { position: absolute; clip: rect(1px,1px,1px,1px); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; }
@@ -244,6 +299,19 @@ footer.site a { color: var(--ink-soft); }
   .stats .grid { gap: 24px; }
   .contact-box { padding: 38px 24px; }
   .answers-head, .entry { padding-top: 60px; }
+  .post-cta { padding: 26px 22px; }
+  .post-nav { margin-top: 56px; }
+  .post-nav .btn { padding: 11px 14px; font-size: .92rem; }
+}
+
+/* Very small screens: prev/next side by side, All answers full-width below. */
+@media (max-width: 480px) {
+  .post-nav { grid-template-columns: 1fr 1fr; }
+  .post-nav__prev { grid-column: 1; grid-row: 1; }
+  .post-nav__next { grid-column: 2; grid-row: 1; }
+  .post-nav__back { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; text-align: center; }
+  .entry-content ul, .entry-content ol { padding-left: 24px; }
+  main#main { padding-bottom: 60px; }
 }
 
 /* WP core niceties */

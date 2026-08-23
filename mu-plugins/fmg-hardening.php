@@ -66,6 +66,30 @@ add_action(
 		}
 	}
 );
+add_filter(
+	'wp_sitemaps_add_provider',
+	function ( $provider, $name ) {
+		return 'users' === $name ? false : $provider;
+	},
+	10,
+	2
+);
+/* ?author=N would canonical-301 to /author/{slug}/ before the redirect above
+ * runs, leaking the slug in the Location header. Suppress that hop. */
+add_filter(
+	'redirect_canonical',
+	function ( $redirect ) {
+		return is_author() ? false : $redirect;
+	}
+);
+/* oEmbed responses carry author_name and an author_url built on the slug. */
+add_filter(
+	'oembed_response_data',
+	function ( $data ) {
+		unset( $data['author_name'], $data['author_url'] );
+		return $data;
+	}
+);
 
 /* WordPress version fingerprint out of head, feeds, and generator output. */
 remove_action( 'wp_head', 'wp_generator' );

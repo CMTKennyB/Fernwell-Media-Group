@@ -159,7 +159,23 @@ get_header();
   </div>
 </section>
 
-<section class="block alt" id="contact">
+<section class="block alt" id="answers">
+  <div class="wrap">
+    <h2>Fernwell Answers:</h2>
+    <p class="sub"><?php echo esc_html( fernwell_answers_description() ); ?></p>
+    <div class="answers-strip">
+      <?php foreach ( get_posts( array( 'numberposts' => 3, 'post_status' => 'publish' ) ) as $fernwell_answer ) : ?>
+        <a class="answers-strip__item" href="<?php echo esc_url( get_permalink( $fernwell_answer ) ); ?>">
+          <h3><?php echo esc_html( get_the_title( $fernwell_answer ) ); ?></h3>
+          <span class="meta"><?php echo esc_html( get_the_date( '', $fernwell_answer ) ); ?> <span aria-hidden="true">&middot;</span> <?php echo esc_html( fernwell_reading_time( $fernwell_answer ) ); ?> min read</span>
+        </a>
+      <?php endforeach; ?>
+    </div>
+    <p class="answers-strip__all"><a class="btn ghost" href="<?php echo esc_url( fernwell_answers_url() ); ?>">All answers <span aria-hidden="true">&rarr;</span></a></p>
+  </div>
+</section>
+
+<section class="block" id="contact">
   <div class="wrap">
     <div class="contact-box">
       <div class="stackmark">

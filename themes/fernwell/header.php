@@ -39,6 +39,7 @@
       <a href="<?php echo esc_url( home_url( '/#services' ) ); ?>">Services</a>
       <a href="<?php echo esc_url( home_url( '/#faq' ) ); ?>">FAQ</a>
       <a href="<?php echo esc_url( home_url( '/#about' ) ); ?>">About</a>
+      <a href="<?php echo esc_url( home_url( '/answers/' ) ); ?>">Answers</a>
       <a class="cta" href="mailto:hello@fernwellgroup.com?subject=Request%20your%20audit">Request your audit</a>
     </nav>
   </div>
