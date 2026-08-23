@@ -202,6 +202,9 @@ function fernwell_schema() {
 				'Entity SEO',
 				'AI search visibility',
 			),
+			'sameAs'        => array(
+				'https://github.com/CMTKennyB/Fernwell-Media',
+			),
 		),
 		array(
 			'@type'       => 'Person',
@@ -209,7 +212,7 @@ function fernwell_schema() {
 			'name'        => 'Kenneth Raymond',
 			'jobTitle'    => 'Founder, Answer Engine Optimization Consultant',
 			'description' => 'Communications systems and knowledge infrastructure specialist. Founder of Fernwell Media Group, an independent AEO consultancy.',
-			'url'         => $base . 'about/',
+			'url'         => $base . '#about',
 			'email'       => 'mailto:hello@fernwellgroup.com',
 			'worksFor'    => array( '@id' => $base . '#org' ),
 			'knowsAbout'  => array(
