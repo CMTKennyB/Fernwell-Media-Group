@@ -5,6 +5,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Schema: post nodes are BlogPosting** (was Article). The blogPost
+  property's expected type is BlogPosting; validator.schema.org flagged the
+  mismatch. BlogPosting is an Article subtype, so nothing is lost.
+- **Schema: speakable targets a real class.** The lede paragraph of every
+  post now carries an `answer-lede` class (merged into the existing class
+  attribute at render), and the SpeakableSpecification points at it instead
+  of a `:first-of-type` pseudo-selector that some consumers can't evaluate.
+
 ## [2.0.0] - 2026-08-23
 
 ### Added

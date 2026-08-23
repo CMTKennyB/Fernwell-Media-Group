@@ -290,6 +290,32 @@ function fernwell_disable_post_taxonomies() {
 add_action( 'init', 'fernwell_disable_post_taxonomies', 20 );
 
 /**
+ * Stamp the lede paragraph of a post with a stable class. The first
+ * paragraph is the direct answer; the speakable node targets it, and a
+ * real class survives consumers whose CSS engines skip pseudo-selectors.
+ */
+function fernwell_lede_class( $content ) {
+	if ( is_singular( 'post' ) && in_the_loop() ) {
+		$content = preg_replace_callback(
+			'/<p\b([^>]*)>/',
+			function ( $m ) {
+				$attrs = $m[1];
+				if ( preg_match( '/\bclass="([^"]*)"/', $attrs, $c ) ) {
+					$attrs = str_replace( $c[0], 'class="' . $c[1] . ' answer-lede"', $attrs );
+				} else {
+					$attrs .= ' class="answer-lede"';
+				}
+				return '<p' . $attrs . '>';
+			},
+			$content,
+			1
+		);
+	}
+	return $content;
+}
+add_filter( 'the_content', 'fernwell_lede_class', 9 );
+
+/**
  * Listing excerpts end in an ellipsis so it's visually clear there's more
  * to read. Manual excerpts never get excerpt_more, so swap the trailing
  * period for one here. Scoped to the Answers listing loop; the excerpt
@@ -544,7 +570,7 @@ function fernwell_schema() {
 			$abstract = wp_strip_all_tags( get_the_excerpt( $post ) );
 		}
 		$article = array(
-			'@type'            => 'Article',
+			'@type'            => 'BlogPosting',
 			'@id'              => $current_url . '#article',
 			'headline'         => get_the_title( $post ),
 			'datePublished'    => get_the_date( 'c', $post ),
@@ -557,7 +583,7 @@ function fernwell_schema() {
 			'timeRequired'     => 'PT' . fernwell_reading_time( $post ) . 'M',
 			'speakable'        => array(
 				'@type'       => 'SpeakableSpecification',
-				'cssSelector' => array( '.entry-header h1', '.entry-content > p:first-of-type' ),
+				'cssSelector' => array( '.entry-header h1', '.answer-lede' ),
 			),
 			'inLanguage'       => 'en-US',
 		);
