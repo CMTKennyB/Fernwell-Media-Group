@@ -34,12 +34,12 @@
       <span class="nav-toggle__bars" aria-hidden="true"><span></span><span></span><span></span></span>
       <span class="screen-reader-text">Menu</span>
     </button>
-    <nav class="links" id="site-nav">
+    <nav class="links" id="site-nav" aria-label="Primary">
       <a href="<?php echo esc_url( home_url( '/#how' ) ); ?>">How it works</a>
       <a href="<?php echo esc_url( home_url( '/#services' ) ); ?>">Services</a>
       <a href="<?php echo esc_url( home_url( '/#faq' ) ); ?>">FAQ</a>
       <a href="<?php echo esc_url( home_url( '/#about' ) ); ?>">About</a>
-      <a class="cta" href="<?php echo esc_url( home_url( '/#contact' ) ); ?>">Get an audit</a>
+      <a class="cta" href="mailto:hello@fernwellgroup.com?subject=Request%20your%20audit">Request your audit</a>
     </nav>
   </div>
 </header>

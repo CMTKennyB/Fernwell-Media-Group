@@ -19,7 +19,7 @@ get_header();
     <?php while ( have_posts() ) : the_post(); ?>
       <header class="entry-header">
         <h1><?php the_title(); ?></h1>
-        <div class="meta">By Kenneth Raymond &middot; <?php echo esc_html( get_the_date() ); ?><?php if ( get_the_modified_date() !== get_the_date() ) : ?> &middot; Updated <?php echo esc_html( get_the_modified_date() ); ?><?php endif; ?></div>
+        <div class="meta">By Kenneth Raymond &middot; <time datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>"><?php echo esc_html( get_the_date() ); ?></time><?php if ( get_the_modified_date() !== get_the_date() ) : ?> &middot; Updated <time datetime="<?php echo esc_attr( get_the_modified_date( 'c' ) ); ?>"><?php echo esc_html( get_the_modified_date() ); ?></time><?php endif; ?></div>
       </header>
       <div class="entry-content">
         <?php the_content(); ?>

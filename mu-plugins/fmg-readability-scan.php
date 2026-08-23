@@ -2,7 +2,7 @@
 /**
  * Plugin Name: FMG AI Readability & Citability Scanner
  * Description: Deterministic single-URL scan scoring whether AI engines can read a site (Readability) and whether its pages are shaped to be cited (Citability). Shortcode: [fmg_readability_scan]
- * Version:     1.1.0-alpha
+ * Version:     1.1.0
  * Author:      Fernwell Media Group
  *
  * Drop this file directly into wp-content/mu-plugins/ (no subfolder: mu-plugins
@@ -101,7 +101,7 @@ function fmg_scan_check_rate_limit() {
 	if ( $hit >= FMG_SCAN_RATE_LIMIT ) {
 		return new WP_Error(
 			'fmg_rate_limited',
-			'That is a lot of scans from one place. Try again in an hour, or email us and we will run it for you.',
+			'This is a lot of scans from one place. Try again in an hour, or email us and we will run it for you.',
 			array( 'status' => 429 )
 		);
 	}
@@ -134,15 +134,15 @@ function fmg_scan_normalize_url( $raw ) {
 
 	$parts = wp_parse_url( $raw );
 	if ( empty( $parts['host'] ) || empty( $parts['scheme'] ) ) {
-		return new WP_Error( 'fmg_bad_url', 'That address could not be read. Try the full form, like https://example.com.', array( 'status' => 400 ) );
+		return new WP_Error( 'fmg_bad_url', 'We cannot read this address. Try the full form, like https://example.com.', array( 'status' => 400 ) );
 	}
 
 	if ( ! in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true ) ) {
-		return new WP_Error( 'fmg_bad_url', 'Only http and https addresses can be scanned.', array( 'status' => 400 ) );
+		return new WP_Error( 'fmg_bad_url', 'The scan covers only http and https addresses.', array( 'status' => 400 ) );
 	}
 
 	if ( isset( $parts['port'] ) && ! in_array( (int) $parts['port'], array( 80, 443 ), true ) ) {
-		return new WP_Error( 'fmg_bad_url', 'Only standard web ports can be scanned.', array( 'status' => 400 ) );
+		return new WP_Error( 'fmg_bad_url', 'The scan covers only standard web ports.', array( 'status' => 400 ) );
 	}
 
 	$host = strtolower( $parts['host'] );
@@ -164,7 +164,7 @@ function fmg_scan_normalize_url( $raw ) {
 function fmg_scan_host_is_public( $host ) {
 	$blocked = array( 'localhost', 'localhost.localdomain', 'broadcasthost' );
 	if ( in_array( $host, $blocked, true ) || substr( $host, -6 ) === '.local' ) {
-		return new WP_Error( 'fmg_bad_host', 'That address is not reachable from the public web.', array( 'status' => 400 ) );
+		return new WP_Error( 'fmg_bad_host', 'This address is not reachable from the public web.', array( 'status' => 400 ) );
 	}
 
 	$ips = array();
@@ -186,13 +186,13 @@ function fmg_scan_host_is_public( $host ) {
 	}
 
 	if ( empty( $ips ) ) {
-		return new WP_Error( 'fmg_bad_host', 'That domain did not resolve. Check the spelling and try again.', array( 'status' => 400 ) );
+		return new WP_Error( 'fmg_bad_host', 'This domain does not resolve. Check the spelling and try again.', array( 'status' => 400 ) );
 	}
 
 	foreach ( $ips as $ip ) {
 		$public = filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
 		if ( false === $public ) {
-			return new WP_Error( 'fmg_bad_host', 'That address points somewhere private and cannot be scanned.', array( 'status' => 400 ) );
+			return new WP_Error( 'fmg_bad_host', 'This address points somewhere private. The scan reads only the public web.', array( 'status' => 400 ) );
 		}
 	}
 
@@ -261,7 +261,7 @@ function fmg_scan_fetch( $url, $max_hops = 3 ) {
 		);
 	}
 
-	return new WP_Error( 'fmg_redirects', 'That address redirects too many times to scan reliably.', array( 'status' => 400 ) );
+	return new WP_Error( 'fmg_redirects', 'This address redirects too many times to scan reliably.', array( 'status' => 400 ) );
 }
 
 /**
@@ -307,7 +307,7 @@ function fmg_scan_run( $url ) {
 	if ( is_wp_error( $page ) ) {
 		return new WP_Error(
 			'fmg_unreachable',
-			'That page could not be reached. Check the address, or the site may be blocking automated visitors, which is itself a finding.',
+			'This page does not respond. Check the address, or the site may be blocking automated visitors, which is itself a finding.',
 			array( 'status' => 400 )
 		);
 	}
@@ -315,7 +315,7 @@ function fmg_scan_run( $url ) {
 	if ( $page['status'] >= 400 ) {
 		return new WP_Error(
 			'fmg_unreachable',
-			sprintf( 'That page returned a %d error. AI crawlers see the same thing.', $page['status'] ),
+			sprintf( 'This page returns a %d error. AI crawlers see the same thing.', $page['status'] ),
 			array( 'status' => 400 )
 		);
 	}
@@ -407,7 +407,7 @@ function fmg_scan_band( $score ) {
 		return array(
 			'label'   => 'Legible',
 			'key'     => 'legible',
-			'summary' => 'AI engines can read this site. Whether they cite it is the next question, and that one is decided off your own pages.',
+			'summary' => 'AI engines can read this site. Reading is the floor. Whether your pages give them something to cite is the next dial down.',
 		);
 	}
 	if ( $score >= 40 ) {
@@ -420,7 +420,7 @@ function fmg_scan_band( $score ) {
 	return array(
 		'label'   => 'Hard to read',
 		'key'     => 'invisible',
-		'summary' => 'An AI engine reading this page comes away without a clear picture of who you are or what you claim. That is a fixable problem, and it is where most sites start.',
+		'summary' => 'An AI engine reading this page comes away without a clear picture of who you are or what you claim. This is a fixable problem, and it is where most sites start.',
 	);
 }
 
@@ -435,7 +435,7 @@ function fmg_scan_cite_band( $score ) {
 		return array(
 			'label'   => 'Citable',
 			'key'     => 'citable',
-			'summary' => 'This page hands an engine a name to credit and claims worth lifting. That is the raw material of a citation. Whether engines actually reach for it is what the audit measures.',
+			'summary' => 'This page hands an engine a name to credit and a trusted claim to quote. This is the raw material of a citation. Whether an engine actually names you is namability, and this is what the audit measures.',
 		);
 	}
 	if ( $score >= 40 ) {
@@ -754,7 +754,7 @@ function fmg_scan_check_extractability( $ctx ) {
 			'Answer-first opening paragraph',
 			str_word_count( $first_para ) >= 25,
 			6,
-			'Open with a direct, self-contained statement of what you do, in one paragraph an engine could lift verbatim with attribution.',
+			'Open with a direct, self-contained statement of what you do, in one paragraph an engine can quote whole and attribute to you.',
 			'' !== $first_para ? 'First substantial paragraph: ' . str_word_count( $first_para ) . ' words' : 'No paragraph of 15+ words found'
 		),
 		fmg_scan_check(
@@ -908,7 +908,7 @@ function fmg_scan_check_structure( $ctx ) {
 			'Real subheadings',
 			$h2 >= 2,
 			5,
-			'Break the page into H2 sections whose text names the question each section answers. Engines lift sections, not pages.',
+			'Break the page into H2 sections whose text names the question each section answers. Engines quote sections, not pages.',
 			$h2 . ' H2 element(s)'
 		),
 		fmg_scan_check(
@@ -1095,7 +1095,7 @@ function fmg_scan_check_citability( $ctx ) {
 			'Self-contained, quotable claims',
 			$has_quotable,
 			25,
-			'Write more sentences that stand alone as a fact an engine could lift verbatim. Definitions and specific, dated, numeric claims travel; hedged marketing prose does not.',
+			'Write more sentences an engine can quote whole, each standing alone as a complete fact. Definitions and specific, dated, numeric claims travel. Hedged marketing catch phrases do not.',
 			$quotable . ' quotable claim(s) detected'
 		),
 		fmg_scan_check(
@@ -1103,14 +1103,14 @@ function fmg_scan_check_citability( $ctx ) {
 			'Claims backed by authoritative sources',
 			$has_sources,
 			20,
-			'Link the claims that matter to primary or authoritative sources (.gov, .edu, journals, DOIs). Pages that cite tend to get cited.',
+			'Link the claims that matter to primary or authoritative sources (.gov, .edu, journals, DOIs, and the databases that anchor your field). Pages that cite tend to get cited.',
 			$sources . ' authoritative source link(s)'
 		),
 	);
 
 	return array(
 		'label'  => 'Citability',
-		'blurb'  => 'Whether the page gives an engine a name to credit and claims worth quoting: the on-page raw material of a citation. The live "does it actually get cited" test is the audit.',
+		'blurb'  => 'Whether the page gives an engine a name to credit and a trusted claim to quote. This is the on-page raw material of a citation. The live test, whether an engine actually names you, is namability, and this is measured by the audit.',
 		'max'    => 100,
 		'checks' => $checks,
 	);
@@ -1223,9 +1223,9 @@ function fmg_scan_shortcode() {
 				<button type="submit" class="fmg-scan__submit">Scan my site</button>
 			</div>
 			<p class="fmg-scan__note">
-				One page, read the way an AI crawler reads it. No account, no email required.
-				You get two scores: whether engines <em>can</em> read you, and whether your page is
-				shaped to be <em>cited</em>. The live test of who actually gets named is the audit.
+				One page, read the way an AI crawler reads it. You get two scores:
+				Readability: how well an engine can read you, and Citability: how well
+				it can cite you. Namability measures who gets named in the answer, and this is the audit.
 			</p>
 		</form>
 		<div class="fmg-scan__status" role="status" aria-live="polite"></div>
@@ -1249,7 +1249,7 @@ function fmg_scan_css() {
   --fmg-dark: #14201e; --fmg-dark-text: #bcc7c3;
   --fmg-apricot: #f4a860; --fmg-line: #dde1d9;
   --fmg-fail: #8a3416;
-  max-width: 760px; margin: 0 auto; color: var(--fmg-ink);
+  max-width: 760px; margin: 38px auto 0; color: var(--fmg-ink);
 }
 .fmg-scan .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -1393,14 +1393,14 @@ function fmg_scan_js() {
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
         if (!res.ok) {
-          setStatus((res.body && res.body.message) || 'That scan did not complete. Try again in a moment.', 'error');
+          setStatus((res.body && res.body.message) || 'The scan did not complete. Try again in a moment.', 'error');
           return;
         }
         setStatus('', 'done');
         render(res.body);
       })
       .catch(function () {
-        setStatus('That scan did not complete. Check the address and try again.', 'error');
+        setStatus('The scan did not complete. Check the address and try again.', 'error');
       })
       .finally(function () {
         button.disabled = false;
@@ -1469,10 +1469,12 @@ function fmg_scan_js() {
     html += ''
       + '<div class="fmg-cta">'
       + '<h3>Two scores a crawler can see. One it cannot.</h3>'
-      + '<p>Readability says engines <em>can</em> read you. Citability says your page is <em>shaped</em> to be '
-      + 'quoted. Whether an engine actually names you when a buyer asks is the third thing, and it is measured '
-      + 'differently: real questions, run across the top engines, scored against your competitors. '
-      + 'Send us this result and we will tell you what it means for your market.</p>'
+      + '<p>Readability measures how well an engine can read you. Citability measures how well it can '
+      + 'cite you. <strong>Namability measures whether it names you in the first place.</strong></p>'
+      + '<p>A crawl by itself cannot measure namability. '
+      + 'It requires asking real questions in leading search and answer engines, then measuring how often '
+      + 'you’re named against your competitors.</p>'
+      + '<p>Send us your result, and we’ll tell you what it means for your market.</p>'
       + '<div class="fmg-cta__actions">'
       + '<a class="fmg-cta__btn" id="fmg-mailto" href="#">Send these results to Fernwell</a>'
       + '<button type="button" class="fmg-cta__btn fmg-cta__btn--ghost" id="fmg-copy">Copy results</button>'

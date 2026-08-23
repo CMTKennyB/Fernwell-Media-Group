@@ -36,7 +36,9 @@ Brand rule: the M and G never appear detached from the F. At small sizes the mar
 
 ### Schema architecture
 
-One connected JSON-LD graph per page, nodes cross-referenced by `@id`: ProfessionalService (`#org`) and Person (`#kenneth`) sitewide, WebSite + WebPage on every page, four Service nodes and FAQPage on the front page, BreadcrumbList on singular pages, Article on posts. FAQ text in `functions.php` must mirror the visible FAQ in `front-page.php`. Validates clean (0 errors, 0 warnings) at validator.schema.org.
+One connected JSON-LD graph per page, nodes cross-referenced by `@id`: ProfessionalService (`#org`) and Person (`#kenneth`) sitewide, WebSite + WebPage on every page, four Service nodes and FAQPage on the front page, BreadcrumbList on singular pages, Article on posts. The FAQPage carries five Q&As mirroring the visible copy in `front-page.php` verbatim: the answer-first AEO definition plus the four FAQ items. Service node names and descriptions mirror the service cards the same way. Validates clean (0 errors, 0 warnings) at validator.schema.org.
+
+Copy vocabulary: the site's three axes are Readability (can an engine read you), Citability (can it cite you), and Namability (does it name you in answers; measured by the audit, not the crawl). Use "engine" for answering and naming, "crawler" for fetching and reading.
 
 ## MU-plugins: `mu-plugins/`
 

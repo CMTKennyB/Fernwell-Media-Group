@@ -50,6 +50,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Homepage copy overhaul**: the front page now speaks one voice, anchored on
+  "you" and built around three named axes: Readability, Citability, and
+  Namability. The hero, AEO explainer, engagement phases (now Measure, Fix,
+  Monitor), services, FAQ, About section (now brand-first), and contact box are
+  all rewritten. Every audit and service button opens a pre-addressed email
+  whose subject echoes the button clicked. The FAQPage markup, Service nodes,
+  site meta description, and llms.txt mirror the visible copy word for word.
+  The named engine list is now ChatGPT, Claude, Perplexity, Gemini, and Grok,
+  and Citation Monitoring is renamed AI Visibility Monitoring.
+- **Scanner copy aligned to the same voice**: result bands, category blurbs,
+  check guidance, error messages, and the form caption all follow the site's
+  language rules, and the scan form gets breathing room below the section
+  intro.
+- **Accessibility pass**: post dates now use semantic time markup (which also
+  satisfies the scanner's visible-date check), smooth scrolling respects
+  reduced-motion settings, the site nav is labeled for screen readers, and the
+  contact heading joins the page outline.
+- Scanner plugin header version set to 1.1.0 (dropping the -alpha tag) to match
+  what production actually runs.
 - **Scanner: authoritative sources recognize biomedical databases**: the
   Citability check that counts outbound links to authoritative sources now
   recognizes the canonical genetics and medical databases (OMIM, Ensembl,

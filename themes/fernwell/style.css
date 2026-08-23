@@ -45,6 +45,7 @@ Text Domain: fernwell
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 html, body { overflow-x: clip; }
 body {
   font-family: var(--font-body);
@@ -186,7 +187,7 @@ section.block.alt .answer-first { background: var(--paper); }
 
 /* Contact */
 .contact-box { margin-top: 38px; background: var(--dark); color: #fff; border-radius: 16px; padding: 52px 48px; text-align: center; }
-.contact-box h3 { font-size: 1.6rem; letter-spacing: -0.01em; }
+.contact-box h2, .contact-box h3 { font-size: 1.6rem; letter-spacing: -0.01em; }
 .contact-box p { color: var(--dark-text); margin: 14px auto 28px; max-width: 500px; }
 .stackmark { margin-bottom: 26px; }
 .stackmark .mono { font-family: var(--font-display); font-weight: 700; font-size: 40px; letter-spacing: .05em; color: var(--paper); line-height: 1; }

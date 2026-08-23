@@ -67,7 +67,7 @@ add_action( 'wp_head', 'fernwell_favicon', 5 );
  */
 function fernwell_social_meta() {
 	$title       = wp_get_document_title();
-	$description = 'Fernwell Media Group is an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond. We help businesses get found and cited by ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews.';
+	$description = 'Fernwell Media Group is an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond. We help businesses get named and cited when AI engines answer.';
 	$url         = home_url( '/' );
 	$type        = 'website';
 
@@ -151,7 +151,8 @@ add_filter( 'password_protected_is_active', 'fernwell_llms_public' );
  * Sitewide: ProfessionalService (#org), Person (#kenneth), WebSite (#website),
  * and a WebPage node for the current URL. Front page adds FAQPage and the four
  * Service nodes. Singular pages add BreadcrumbList; posts add Article.
- * The FAQ answers here must mirror the visible FAQ content in front-page.php.
+ * The FAQ answers here must mirror the visible copy in front-page.php: the
+ * answer-first box (the "What is AEO?" entry) and the FAQ section, verbatim.
  */
 function fernwell_schema() {
 	$base = home_url( '/' );
@@ -167,19 +168,19 @@ function fernwell_schema() {
 	$services = array(
 		array(
 			'name' => 'AI Visibility Audit',
-			'desc' => 'A systematic test of a business\'s presence across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmarked against competitors, with a prioritized fix list. Fixed fee, delivered as a report plus a working session.',
+			'desc' => 'Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Grok, benchmark your namability against competitors, and deliver a prioritized list of fixes.',
 		),
 		array(
 			'name' => 'AEO Sprint',
-			'desc' => 'Four to six weeks of implementation: structured data across the site, entity consistency everywhere the business appears, and answer-first rewrites of the pages AI engines pull from.',
+			'desc' => 'We turn the audit into the stuff engines need: structured data, entity consistency, information architecture, and answer-first rewrites of the pages most likely to shape AI answers about you.',
 		),
 		array(
-			'name' => 'Citation Monitoring',
-			'desc' => 'Monthly prompt testing and citation tracking across AI engines, share-of-voice against competitors, and a plain-English report on what moved and why.',
+			'name' => 'AI Visibility Monitoring',
+			'desc' => 'We continue testing the questions that matter in your market across leading AI engines and track namability, citation share, and competitor movement over time. You see what changed, what didn\'t, and what to do next.',
 		),
 		array(
 			'name' => 'Team Enablement',
-			'desc' => 'Workshops and advisory for marketing teams and agencies that want AEO capability in-house.',
+			'desc' => 'Workshops and advisory for marketing teams and agencies that want to build AEO capability in-house. We’ll teach the framework, measurement, and implementation. Your team keeps the method.',
 		),
 	);
 
@@ -189,7 +190,7 @@ function fernwell_schema() {
 			'@id'           => $base . '#org',
 			'name'          => 'Fernwell Media Group',
 			'alternateName' => 'FMG',
-			'description'   => 'Independent Answer Engine Optimization (AEO) consultancy: AI visibility audits, schema and entity implementation, and citation monitoring across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews.',
+			'description'   => 'Independent Answer Engine Optimization (AEO) consultancy: AI visibility audits, schema and entity implementation, and AI visibility monitoring across ChatGPT, Claude, Perplexity, Gemini, and Grok.',
 			'url'           => $base,
 			'founder'       => array( '@id' => $base . '#kenneth' ),
 			'areaServed'    => 'United States',
@@ -279,19 +280,23 @@ function fernwell_schema() {
 		$faqs = array(
 			array(
 				'q' => 'What is Answer Engine Optimization (AEO)?',
-				'a' => 'Answer Engine Optimization (AEO) is the practice of structuring your website and content so that AI engines like ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews cite your business when they answer questions your customers ask. Where SEO competes for rankings, AEO competes for citations.',
+				'a' => 'Answer Engine Optimization (AEO) is the practice of making you understandable, citable, and nameable by the AI engines answering your customers’ questions. Where SEO competes for rankings, AEO competes for inclusion in the answer.',
 			),
 			array(
-				'q' => 'How is AEO different from SEO?',
-				'a' => 'SEO optimizes for a list of links; AEO optimizes for a single synthesized answer. Only 8% of ChatGPT citations overlap with Google\'s top organic results, so ranking well on Google does not guarantee AI engines will mention you. AEO adds entity definition, structured data, and answer-first content on top of a sound SEO foundation.',
+				'q' => 'What’s the difference between AEO and SEO?',
+				'a' => 'SEO optimizes for visibility in ranked search results. AEO optimizes for inclusion in AI-generated answers. Strong SEO helps engines find you, but it does not guarantee they will understand, cite, or name you. AEO builds on this foundation with entity definition, structured data, information architecture, answer-first content, and direct measurement of AI answers.',
 			),
 			array(
-				'q' => 'How do I know if AI engines mention my business?',
-				'a' => 'You test it directly: ask the questions your customers ask across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, and record who gets named and cited. An AI Visibility Audit does this systematically across the engines and query types that matter for your market, then compares your presence against competitors.',
+				'q' => 'How do I know if AI engines are naming me?',
+				'a' => 'Ask the questions your customers actually ask and measure who gets named, who gets cited, and who gets left out. A single prompt tells you very little. A repeatable benchmark across engines, questions, and competitors measures your namability and shows who is taking your place in the answer. This is what the AI Visibility Audit does.',
 			),
 			array(
-				'q' => 'How long does AEO take to show results?',
-				'a' => 'Technical fixes like schema markup and entity cleanup can be reflected within weeks as engines recrawl. Citation share builds over one to two quarters as answer-first content is published and picked up. Monitoring makes the progress visible month over month.',
+				'q' => 'How long does AEO take to work?',
+				'a' => 'There isn’t a universal timeline. Technical changes can appear as engines recrawl, while changes in namability and citation share can take longer and vary by engine. This is why we keep testing the same questions after changes are made. Monitoring shows what moved, what didn’t, and what to do next.',
+			),
+			array(
+				'q' => 'Do I need AEO if I already invest in SEO?',
+				'a' => 'Probably. Strong SEO gives AEO a better foundation, but it does not answer the same question. SEO tells you whether people can find you in search results. AEO tells you whether an engine understands, cites, and names you when it answers that question. An audit shows whether there is actually a gap before you invest in fixing one.',
 			),
 		);
 

@@ -19,9 +19,9 @@ get_header();
   <div class="wrap">
     <span class="kicker">An AEO Consultancy</span>
     <h1>Every yes begins with an answer. Make sure it's yours.</h1>
-    <p class="lede">Your customers are asking AI engines who to trust, what to buy, and where to go. Fernwell Media Group makes sure the answer includes you. Independent consultancy, fixed-scope engagements, reporting you can read without a glossary.</p>
+    <p class="lede">Your customers are asking AI who to trust, what to buy, and where to go. Fernwell Media Group measures who gets named, who gets cited, and who gets left out. We show you where you stand, why competitors are taking your place in the answer, and what needs to change.</p>
     <div class="actions">
-      <a class="btn primary" href="#contact">Request an AI Visibility Audit</a>
+      <a class="btn primary" href="mailto:hello@fernwellgroup.com?subject=Request%20your%20audit">Request your audit</a>
       <a class="btn ghost" href="#how">See how it works</a>
     </div>
   </div>
@@ -54,8 +54,8 @@ get_header();
 
 <section class="block alt" id="scan">
   <div class="wrap">
-    <h2>See how an AI engine reads your site</h2>
-    <p class="sub">Before we ever talk, run the same first check we do: a free, single-page scan that scores whether AI engines can actually read you. No account, no email.</p>
+    <h2>See how an AI engine sees you</h2>
+    <p class="sub">Start with the first question every AI visibility strategy has to answer: can an engine actually read you? Run a free, single-page scan for readability and citability. No account. No email.</p>
     <?php echo do_shortcode( '[fmg_readability_scan]' ); ?>
   </div>
 </section>
@@ -64,31 +64,31 @@ get_header();
   <div class="wrap">
     <h2>What is Answer Engine Optimization?</h2>
     <div class="answer-first">
-      <strong>Answer Engine Optimization (AEO)</strong> is the practice of structuring your website and content so that AI engines cite your business when they answer the questions your customers ask. Where SEO competes for rankings, AEO competes for citations.
+      <strong>Answer Engine Optimization (AEO)</strong> is the practice of making you understandable, citable, and nameable by the AI engines answering your customers’ questions. Where SEO competes for rankings, AEO competes for inclusion in the answer.
     </div>
-    <p class="sub">The debate about whether AI changes search already ended. Your customers increasingly get one synthesized answer instead of ten links, and if that answer names a competitor, no amount of ranking fixes it. AEO makes your business legible to the engines writing those answers: a clearly defined entity, structured data they can parse, and content shaped like the answers they assemble. Information architecture is how you solve for it, and this page is built that way on purpose. View the source and you'll see the method for sale.</p>
+    <p class="sub">AI engines need to understand who you are before they can cite you. A readable website alone doesn’t put you in the answer. AEO connects the pieces through information architecture: clear entity information, structured data that machines can parse, and content built around real questions. This site puts those principles into practice, from the information you see to the markup underneath it. View the source code, and you'll see the method for sale.</p>
   </div>
 </section>
 
 <section class="block alt" id="how">
   <div class="wrap">
     <h2>How does an AEO engagement work?</h2>
-    <p class="sub">Three phases, each with its own deliverable. You can stop after any of them and keep everything.</p>
+    <p class="sub">Measure where you stand. Fix what’s holding you back. Monitor what happens next. You decide how far you want to go, and you keep all deliverables.</p>
     <div class="steps">
       <div class="step">
         <div class="n">1</div>
         <h3>Measure</h3>
-        <p>We test the questions your customers actually ask across the top AI engines and record who gets named, who gets cited, and where you're absent while competitors appear.</p>
+        <p>We ask the questions your customers actually ask across leading AI engines and measure who gets named, who gets cited, and who gets left out. Then we benchmark your namability against the competitors who are taking your place in the answer.</p>
       </div>
       <div class="step">
         <div class="n">2</div>
         <h3>Fix</h3>
-        <p>Schema markup, entity cleanup, and answer-first restructuring of the pages that matter. Engines get an unambiguous, machine-readable picture of who you are and what you do.</p>
+        <p>We fix what prevents engines from understanding and using you: schema markup, entity inconsistencies, underperforming information architecture, and content that obscures the answers they need.</p>
       </div>
       <div class="step">
         <div class="n">3</div>
-        <h3>Compound</h3>
-        <p>A question-shaped content plan plus monthly citation tracking, so your share of AI answers grows and you can watch it happen in a report written in plain English.</p>
+        <h3>Monitor</h3>
+        <p>We build for the questions your market is asking, and we continue to measure the answers. You see if your share of AI answers is growing, where competitors are gaining ground, and what to do next.</p>
       </div>
     </div>
   </div>
@@ -97,31 +97,31 @@ get_header();
 <section class="block" id="services">
   <div class="wrap">
     <h2>Services</h2>
-    <p class="sub">Agencies charge five figures before the work starts. Fernwell Media Group keeps engagements fixed-scope, fixed-price, and free of account managers. You work directly with the person who does the work.</p>
+    <p class="sub">Start with measurement. Fix what the data reveals. Monitor as the answer environment changes. Or bring the method in-house.</p>
     <div class="services">
       <div class="card">
-        <div class="tag">Start here</div>
+        <div class="tag">Measure</div>
         <h3>AI Visibility Audit</h3>
-        <p>A systematic test of your presence across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmarked against competitors, with a prioritized fix list. Fixed fee, delivered as a report plus a working session.</p>
-        <a href="#contact">Request an audit &rarr;</a>
+        <p>Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Grok, benchmark your namability against competitors, and deliver a prioritized list of fixes.</p>
+        <a href="mailto:hello@fernwellgroup.com?subject=Request%20an%20audit">Request an audit &rarr;</a>
       </div>
       <div class="card">
-        <div class="tag">Implementation</div>
+        <div class="tag">Fix</div>
         <h3>AEO Sprint</h3>
-        <p>Four to six weeks executing the audit: structured data across your site, entity consistency everywhere your business appears, and answer-first rewrites of the pages engines pull from.</p>
-        <a href="#contact">Discuss a sprint &rarr;</a>
+        <p>We turn the audit into the stuff engines need: structured data, entity consistency, information architecture, and answer-first rewrites of the pages most likely to shape AI answers about you.</p>
+        <a href="mailto:hello@fernwellgroup.com?subject=Discuss%20a%20sprint">Discuss a sprint &rarr;</a>
       </div>
       <div class="card">
-        <div class="tag">Ongoing</div>
-        <h3>Citation Monitoring</h3>
-        <p>Monthly prompt testing and citation tracking across engines, share-of-voice against competitors, and a plain-English report on what moved and why.</p>
-        <a href="#contact">Set up monitoring &rarr;</a>
+        <div class="tag">Monitor</div>
+        <h3>AI Visibility Monitoring</h3>
+        <p>We continue testing the questions that matter in your market across leading AI engines and track namability, citation share, and competitor movement over time. You see what changed, what didn't, and what to do next.</p>
+        <a href="mailto:hello@fernwellgroup.com?subject=Set%20up%20monitoring">Set up monitoring &rarr;</a>
       </div>
       <div class="card">
-        <div class="tag">For teams</div>
+        <div class="tag">Bring it in-house</div>
         <h3>Team Enablement</h3>
-        <p>Workshops and advisory for marketing teams and agencies that want AEO capability in-house. Your team keeps the playbook.</p>
-        <a href="#contact">Book a workshop &rarr;</a>
+        <p>Workshops and advisory for marketing teams and agencies that want to build AEO capability in-house. We’ll teach the framework, measurement, and implementation. Your team keeps the method.</p>
+        <a href="mailto:hello@fernwellgroup.com?subject=Book%20a%20workshop">Book a workshop &rarr;</a>
       </div>
     </div>
   </div>
@@ -132,20 +132,20 @@ get_header();
     <h2>Frequently asked questions</h2>
     <div class="faq">
       <details>
-        <summary>How is AEO different from SEO?</summary>
-        <div class="a">SEO optimizes for a list of links; AEO optimizes for a single synthesized answer. Only 8% of ChatGPT citations overlap with Google's top organic results, so ranking well does not guarantee AI engines mention you. AEO adds entity definition, structured data, and answer-first content on top of a sound SEO foundation. The two work together; neither replaces the other.</div>
+        <summary>What’s the difference between AEO and SEO?</summary>
+        <div class="a">SEO optimizes for visibility in ranked search results. AEO optimizes for inclusion in AI-generated answers. Strong SEO helps engines find you, but it does not guarantee they will understand, cite, or name you. AEO builds on this foundation with entity definition, structured data, information architecture, answer-first content, and direct measurement of AI answers.</div>
       </details>
       <details>
-        <summary>How do I know if AI engines mention my business today?</summary>
-        <div class="a">Ask them what your customers ask and see who gets named. That's exactly what the AI Visibility Audit does, systematically, across the top engines and the query types that matter for your market, with competitors benchmarked alongside you.</div>
+        <summary>How do I know if AI engines are naming me?</summary>
+        <div class="a">Ask the questions your customers actually ask and measure who gets named, who gets cited, and who gets left out. A single prompt tells you very little. A repeatable benchmark across engines, questions, and competitors measures your namability and shows who is taking your place in the answer. This is what the AI Visibility Audit does.</div>
       </details>
       <details>
-        <summary>How long until results show up?</summary>
-        <div class="a">Technical fixes can be reflected within weeks as engines recrawl. Citation share builds over one to two quarters as answer-first content gets published and picked up. Monitoring makes the progress visible month over month, so you're never guessing.</div>
+        <summary>How long does AEO take to work?</summary>
+        <div class="a">There isn’t a universal timeline. Technical changes can appear as engines recrawl, while changes in namability and citation share can take longer and vary by engine. This is why we keep testing the same questions after changes are made. Monitoring shows what moved, what didn’t, and what to do next.</div>
       </details>
       <details>
-        <summary>Do I need this if I already invest in SEO?</summary>
-        <div class="a">Yes, and your SEO investment makes AEO cheaper to add. The overlap between Google's top results and AI citations is small, which means AI visibility is a separate battle fought with related weapons. An audit will tell you quickly whether there's a real gap.</div>
+        <summary>Do I need AEO if I already invest in SEO?</summary>
+        <div class="a">Probably. Strong SEO gives AEO a better foundation, but it does not answer the same question. SEO tells you whether people can find you in search results. AEO tells you whether an engine understands, cites, and names you when it answers that question. An audit shows whether there is actually a gap before you invest in fixing one.</div>
       </details>
     </div>
   </div>
@@ -153,14 +153,9 @@ get_header();
 
 <section class="block" id="about">
   <div class="wrap">
-    <h2>Who's behind Fernwell Media Group?</h2>
-    <div class="about-grid">
-      <div class="headshot">Headshot<br>goes here</div>
-      <div>
-        <p><strong>Fernwell Media Group is Kenneth Raymond,</strong> a communications systems and knowledge infrastructure specialist. [One or two more sentences of bio: how you came to AEO, one credibility anchor such as a result, a client type, or relevant history.]</p>
-        <p>The consultancy works solo and fixed-scope on purpose. You get the person who does the work, reports written for humans, and a site that practices what it sells: this page is structured, marked up, and written exactly the way yours will be.</p>
-      </div>
-    </div>
+    <h2>About Fernwell Media Group</h2>
+    <p class="sub">Fernwell Media Group is an answer engine optimization consultancy built around measurement, implementation, and transparency. We help you understand how AI engines see you, fix what prevents them from using you in answers, and measure the difference these changes make.</p>
+    <p class="sub">We don’t ask you to take our word for it. We show you what we measure, how we measure it, and what the results mean. You see where you stand, what needs to change, and the difference the work makes.</p>
   </div>
 </section>
 
@@ -172,9 +167,9 @@ get_header();
         <div class="rule"></div>
         <div class="word">Fernwell Media Group</div>
       </div>
-      <h3>Find out what AI says about your business.</h3>
-      <p>Send your site and your three biggest competitors. You'll get back a free spot-check of one question your customers are asking AI right now.</p>
-      <a class="btn primary" href="mailto:hello@fernwellgroup.com?subject=AI%20Visibility%20Spot-Check">Email for a free spot-check</a>
+      <h2>Does AI name you?</h2>
+      <p>Send us your site and your three biggest competitors. We’ll run a free spot-check on a question your customers are asking and show you who gets named.</p>
+      <a class="btn primary" href="mailto:hello@fernwellgroup.com?subject=AI%20Visibility%20Spot-Check">Get your free spot-check</a>
     </div>
   </div>
 </section>

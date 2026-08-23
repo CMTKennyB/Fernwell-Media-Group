@@ -27,7 +27,7 @@ get_header();
       <?php while ( have_posts() ) : the_post(); ?>
         <article class="answer-item">
           <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
-          <div class="meta"><?php echo esc_html( get_the_date() ); ?></div>
+          <div class="meta"><time datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>"><?php echo esc_html( get_the_date() ); ?></time></div>
           <div class="excerpt"><?php the_excerpt(); ?></div>
         </article>
       <?php endwhile; ?>
