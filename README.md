@@ -1,4 +1,4 @@
-# Fernwell Media
+# Fernwell Media Group
 
 WordPress site code for **Fernwell Media Group** (FMG), an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond.
 
@@ -10,6 +10,8 @@ This repo is rooted at `wp-content/` per house convention. WordPress core, `wp-c
 
 Branches: all work happens on `dev`; `main` receives merges when there is enough to merge.
 
+Release history lives in [CHANGELOG.md](CHANGELOG.md).
+
 ## Theme: `themes/fernwell`
 
 Custom theme, no page builder, no SEO plugin; the theme owns its own markup, meta, and structured data.
@@ -19,7 +21,7 @@ Custom theme, no page builder, no SEO plugin; the theme owns its own markup, met
 | `style.css` | Grove design system: palette tokens, typography, components, blog styles |
 | `functions.php` | Theme supports, font/style enqueue, favicon, meta description + Open Graph/Twitter output, JSON-LD schema graph, llms.txt rewrite |
 | `header.php` / `footer.php` | Site chrome, FMG lockup, skip link, `<main>` landmark, self-updating copyright year |
-| `front-page.php` | The homepage: hero, stats, AEO explainer, process, services, FAQ, about, contact |
+| `front-page.php` | The homepage: hero, stats, scanner, AEO explainer, process, services, FAQ, about, contact |
 | `index.php` | Answers (blog) listing |
 | `single.php` / `page.php` | Post and page layouts |
 | `page-privacy-policy.php`, `page-terms-of-service.php`, `page-cookie-policy.php` | Slug-matched legal page templates; content is version-controlled here, the WP pages exist only to provide URLs |
