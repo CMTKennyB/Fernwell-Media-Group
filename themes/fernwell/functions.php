@@ -199,6 +199,31 @@ function fernwell_social_meta() {
 add_action( 'wp_head', 'fernwell_social_meta', 4 );
 
 /**
+ * Front-page freshness: the homepage has no post of its own, so anchor its
+ * dates to real site-content activity. Both are filterable.
+ */
+function fernwell_home_dates() {
+	$newest = get_posts( array( 'numberposts' => 1, 'post_status' => 'publish', 'orderby' => 'modified', 'order' => 'DESC', 'fields' => 'ids' ) );
+	$oldest = get_posts( array( 'numberposts' => 1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC', 'fields' => 'ids' ) );
+	$modified  = $newest ? get_post_modified_time( 'c', false, $newest[0] ) : current_time( 'c' );
+	$published = $oldest ? get_post_time( 'c', false, $oldest[0] ) : $modified;
+	return array(
+		'published' => apply_filters( 'fernwell_home_published', $published ),
+		'modified'  => apply_filters( 'fernwell_home_modified', $modified ),
+	);
+}
+
+function fernwell_home_freshness_meta() {
+	if ( ! is_front_page() ) {
+		return;
+	}
+	$home = fernwell_home_dates();
+	printf( "<meta property=\"article:published_time\" content=\"%s\" />\n", esc_attr( $home['published'] ) );
+	printf( "<meta property=\"article:modified_time\" content=\"%s\" />\n", esc_attr( $home['modified'] ) );
+}
+add_action( 'wp_head', 'fernwell_home_freshness_meta', 5 );
+
+/**
  * Serve /llms.txt from the theme so the file stays version-controlled.
  * Content lives in the theme's llms.txt; a rewrite rule maps the root URL
  * to it. After theme activation or changes here, flush permalinks once
@@ -386,7 +411,7 @@ function fernwell_schema() {
 	$services = array(
 		array(
 			'name' => 'AI Visibility Audit',
-			'desc' => 'Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Grok, benchmark your namability against competitors, and deliver a prioritized list of fixes.',
+			'desc' => 'Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmark your namability against competitors, and deliver a prioritized list of fixes.',
 		),
 		array(
 			'name' => 'AEO Sprint',
@@ -402,13 +427,15 @@ function fernwell_schema() {
 		),
 	);
 
+	$reviewer_id = apply_filters( 'fernwell_reviewedby_id', $base . '#kenneth' );
+
 	$graph = array(
 		array(
 			'@type'         => 'ProfessionalService',
 			'@id'           => $base . '#org',
 			'name'          => 'Fernwell Media Group',
 			'alternateName' => 'FMG',
-			'description'   => 'Independent Answer Engine Optimization (AEO) consultancy: AI visibility audits, schema and entity implementation, and AI visibility monitoring across ChatGPT, Claude, Perplexity, Gemini, and Grok.',
+			'description'   => 'Independent Answer Engine Optimization (AEO) consultancy: AI visibility audits, schema and entity implementation, and AI visibility monitoring across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews.',
 			'url'           => $base,
 			'founder'       => array( '@id' => $base . '#kenneth' ),
 			'areaServed'    => 'United States',
@@ -442,6 +469,16 @@ function fernwell_schema() {
 			'sameAs'      => array(
 				'https://www.linkedin.com/in/kenny-raymond/',
 			),
+			'hasCredential' => array(
+				'@type'              => 'EducationalOccupationalCredential',
+				'credentialCategory' => 'degree',
+				'educationalLevel'   => 'Bachelor of Science',
+				'name'               => 'B.S. in Human Communication',
+				'recognizedBy'       => array(
+					'@type' => 'CollegeOrUniversity',
+					'name'  => 'Arizona State University',
+				),
+			),
 		),
 		array(
 			'@type'     => 'WebSite',
@@ -458,9 +495,18 @@ function fernwell_schema() {
 			'name'       => wp_get_document_title(),
 			'isPartOf'   => array( '@id' => $base . '#website' ),
 			'about'      => array( '@id' => $base . '#org' ),
+			'reviewedBy' => array( '@id' => $reviewer_id ),
 			'inLanguage' => 'en-US',
 		),
 	);
+
+	if ( is_front_page() ) {
+		// Anchor the homepage's dates to real site-content activity.
+		$home   = fernwell_home_dates();
+		$wp_key = array_key_last( $graph );
+		$graph[ $wp_key ]['datePublished'] = $home['published'];
+		$graph[ $wp_key ]['dateModified']  = $home['modified'];
+	}
 
 	$answers_url = fernwell_answers_url();
 
@@ -576,6 +622,7 @@ function fernwell_schema() {
 			'datePublished'    => get_the_date( 'c', $post ),
 			'dateModified'     => get_the_modified_date( 'c', $post ),
 			'author'           => array( '@id' => $base . '#kenneth' ),
+			'reviewedBy'       => array( '@id' => $reviewer_id ),
 			'publisher'        => array( '@id' => $base . '#org' ),
 			'isPartOf'         => array( '@id' => $answers_url . '#blog' ),
 			'mainEntityOfPage' => array( '@id' => $current_url . '#webpage' ),

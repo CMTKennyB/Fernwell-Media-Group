@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Updated date moved to the post footer**: the "Updated {date}" line now
+  renders after the post content (left-aligned, meta styling) instead of in
+  the byline, which now carries only author, publish date, and reading
+  time. Schema dateModified is unchanged.
+
 ## [2.0.0] - 2026-08-23
 
 ### Added

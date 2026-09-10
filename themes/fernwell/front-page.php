@@ -102,7 +102,7 @@ get_header();
       <div class="card">
         <div class="tag">Measure</div>
         <h3>AI Visibility Audit</h3>
-        <p>Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Grok, benchmark your namability against competitors, and deliver a prioritized list of fixes.</p>
+        <p>Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmark your namability against competitors, and deliver a prioritized list of fixes.</p>
         <a href="mailto:hello@fernwellgroup.com?subject=Request%20an%20audit">Request an audit &rarr;</a>
       </div>
       <div class="card">

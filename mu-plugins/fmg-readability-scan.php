@@ -572,6 +572,37 @@ function fmg_scan_find_type( $nodes, $types ) {
 }
 
 /**
+ * Find the first node whose @type matches an exact value or ends with a suffix.
+ * Suffix matching credits schema.org subtypes (OnlineStore, AutomotiveBusiness,
+ * NewsArticle, ...) without enumerating the entire type hierarchy.
+ *
+ * @param array $nodes    JSON-LD nodes.
+ * @param array $exact    Exact @type values to match.
+ * @param array $suffixes @type suffixes to match (e.g. 'Business', 'Article').
+ * @return array|null
+ */
+function fmg_scan_find_node( $nodes, $exact, $suffixes = array() ) {
+	foreach ( $nodes as $node ) {
+		if ( empty( $node['@type'] ) ) {
+			continue;
+		}
+		foreach ( (array) $node['@type'] as $type ) {
+			$type = (string) $type;
+			if ( in_array( $type, $exact, true ) ) {
+				return $node;
+			}
+			foreach ( $suffixes as $suffix ) {
+				$len = strlen( $suffix );
+				if ( strlen( $type ) > $len && 0 === substr_compare( $type, $suffix, -$len ) ) {
+					return $node;
+				}
+			}
+		}
+	}
+	return null;
+}
+
+/**
  * Build one check row.
  *
  * @param string $id     Slug.
@@ -609,9 +640,17 @@ function fmg_scan_check( $id, $label, $pass, $weight, $fix, $detail = '' ) {
 function fmg_scan_check_entity( $ctx ) {
 	$nodes = $ctx['jsonld'];
 
-	$org = fmg_scan_find_type(
+	$org = fmg_scan_find_node(
 		$nodes,
-		array( 'Organization', 'LocalBusiness', 'ProfessionalService', 'Corporation', 'NGO', 'Person' )
+		array(
+			'Person', 'Organization', 'LocalBusiness', 'Corporation', 'NGO', 'NonprofitOrganization',
+			'GovernmentOrganization', 'EducationalOrganization', 'CollegeOrUniversity', 'School',
+			'NewsMediaOrganization', 'ResearchOrganization', 'MedicalOrganization', 'Hospital',
+			'ProfessionalService', 'FinancialService', 'LegalService', 'RealEstateAgent',
+			'Store', 'OnlineStore', 'OnlineBusiness', 'Restaurant', 'FoodEstablishment',
+			'LodgingBusiness', 'Hotel', 'TravelAgency', 'Airline',
+		),
+		array( 'Business', 'Organization' )
 	);
 
 	$same_as = array();
@@ -880,18 +919,17 @@ function fmg_scan_check_structure( $ctx ) {
 	$desc     = fmg_scan_meta( $ctx, 'description', 'name' );
 	$desc_len = strlen( $desc );
 
-	$qa = fmg_scan_find_type(
+	$qa = fmg_scan_find_node(
 		$ctx['jsonld'],
 		array(
-			// Generic content types.
-			'FAQPage', 'QAPage', 'Article', 'BlogPosting', 'HowTo', 'Service', 'Product',
-			// Medical content types: a health page declaring what kind of answer
-			// it holds. Counted for citability already; credited here too so
-			// medical sites are not penalised for using the correct schema.
+			// Content and answer types, industry-agnostic.
+			'Article', 'NewsArticle', 'ScholarlyArticle', 'TechArticle', 'Report',
+			'BlogPosting', 'LiveBlogPosting', 'FAQPage', 'QAPage', 'Question',
+			'HowTo', 'Recipe', 'Review', 'Service', 'Product', 'Course', 'Event', 'Dataset',
+			// Medical content types remain valid members of the set, not its flavor.
 			'MedicalWebPage', 'MedicalCondition', 'MedicalScholarlyArticle', 'MedicalGuideline', 'Drug',
-			// Dataset: research/data pages (e.g. a DOI-anchored dataset).
-			'Dataset',
-		)
+		),
+		array( 'Article', 'Posting' )
 	);
 
 	$checks = array(
@@ -1023,21 +1061,41 @@ function fmg_scan_check_citability( $ctx ) {
 		: ( $person ? 'Person markup present'
 		: ( $byline ? 'Byline found in page markup' : 'No author or byline found' ) );
 
-	// 2. Expertise / E-E-A-T signals.
+	// 2. Expertise / E-E-A-T signals. Resolve @id references so a referenced
+	//    author or reviewer's credentials count, not only inline objects.
+	$by_id = array();
+	foreach ( $nodes as $node ) {
+		if ( ! empty( $node['@id'] ) ) {
+			$by_id[ $node['@id'] ] = $node;
+		}
+	}
+	$resolve_ref = function ( $ref ) use ( $by_id ) {
+		if ( is_array( $ref ) && isset( $ref['@id'] ) && isset( $by_id[ $ref['@id'] ] ) ) {
+			return $by_id[ $ref['@id'] ];
+		}
+		return is_array( $ref ) ? $ref : null;
+	};
 	$expertise_schema = false;
 	foreach ( $nodes as $node ) {
-		if ( ! empty( $node['reviewedBy'] ) || ! empty( $node['hasCredential'] )
-			|| ( isset( $node['author']['jobTitle'] ) && '' !== $node['author']['jobTitle'] ) ) {
+		if ( ! empty( $node['reviewedBy'] ) || ! empty( $node['hasCredential'] ) ) {
 			$expertise_schema = true;
 			break;
 		}
+		foreach ( array( 'author', 'reviewedBy', 'creator' ) as $rel ) {
+			if ( empty( $node[ $rel ] ) ) {
+				continue;
+			}
+			$who = $resolve_ref( $node[ $rel ] );
+			if ( is_array( $who ) && ( ! empty( $who['jobTitle'] ) || ! empty( $who['hasCredential'] ) ) ) {
+				$expertise_schema = true;
+				break 2;
+			}
+		}
 	}
-	$med            = fmg_scan_find_type( $nodes, array( 'MedicalWebPage', 'MedicalScholarlyArticle' ) );
-	$expertise_text = (bool) preg_match( '/\b(medically reviewed|reviewed by|fact[- ]checked|board[- ]certified|Ph\.?\s?D|M\.?\s?D\.?|M\.?Sc|R\.?N\.?)\b/i', $body );
-	$has_expertise  = $expertise_schema || (bool) $med || $expertise_text;
+	$expertise_text = (bool) preg_match( '/\b(reviewed by|fact[- ]checked|edited by|board[- ]certified|licensed|accredited|certified|Ph\.?\s?D|M\.?\s?D|M\.?Sc|M\.?B\.?A|J\.?D|LL\.?M|C\.?P\.?A|C\.?F\.?A|P\.?E\.?|Esq|R\.?N)\b/i', $body );
+	$has_expertise  = $expertise_schema || $expertise_text;
 	$exp_detail     = $expertise_schema ? 'Credentials or reviewer in structured data'
-		: ( $med ? 'Medical content markup present'
-		: ( $expertise_text ? 'Credential or review language on the page' : 'No expertise or review signals found' ) );
+		: ( $expertise_text ? 'Credential or review language on the page' : 'No expertise or review signals found' );
 
 	// 3. Quotable-claim density: self-contained sentences an engine could lift.
 	$sentences = preg_split( '/(?<=[.!?])\s+/', $body );
@@ -1057,21 +1115,52 @@ function fmg_scan_check_citability( $ctx ) {
 	}
 	$has_quotable = $quotable >= 5;
 
-	// 4. Sourced claims: outbound links to authoritative sources.
-	$origin_host = (string) wp_parse_url( $ctx['origin'], PHP_URL_HOST );
-	$sources     = 0;
+	// 4. Sourced claims: does the content cite external sources at all, and are
+	//    any inherently authoritative. Behaviour-based, not an editorial allowlist.
+	$origin_host = strtolower( (string) wp_parse_url( $ctx['origin'], PHP_URL_HOST ) );
+	$registrable = function ( $host ) {
+		$host  = strtolower( (string) $host );
+		$parts = explode( '.', $host );
+		return count( $parts ) >= 2 ? implode( '.', array_slice( $parts, -2 ) ) : $host;
+	};
+	$origin_reg = $registrable( $origin_host );
+	// Social, sharing, and asset/utility hosts are not citations.
+	$noncitation = '/(^|\.)(facebook|fb|twitter|linkedin|instagram|youtube|youtu|pinterest|tiktok|reddit|threads|whatsapp|fonts\.googleapis|fonts\.gstatic|gstatic|googletagmanager|google-analytics|doubleclick|gravatar|jsdelivr|unpkg|cloudfront)\./i';
+	// Authoritative by structure: government, academic, intergovernmental, and
+	// citation/standards/reference infrastructure. Industry-agnostic.
+	$authority_re = '/(\.gov(\.[a-z]{2})?|\.mil|\.edu|\.ac\.[a-z]{2}|\.int|(^|\.)(doi|orcid|arxiv|crossref|jstor|semanticscholar|w3|ietf|rfc-editor|iso|iana|unicode|wikipedia|wikidata|un|oecd|worldbank)\.|(^|\.)europa\.eu)/i';
+	$cited           = 0;
+	$authority_cited = 0;
 	if ( $ctx['xpath'] ) {
-		foreach ( $ctx['xpath']->query( '//a[@href]' ) as $a ) {
-			$host = (string) wp_parse_url( $a->getAttribute( 'href' ), PHP_URL_HOST );
-			if ( '' === $host || 0 === strcasecmp( $host, $origin_host ) ) {
+		$scope = null;
+		foreach ( array( '//main', '//article', '//*[@role="main"]' ) as $q ) {
+			$found = $ctx['xpath']->query( $q );
+			if ( $found && $found->length ) {
+				$scope = $found->item( 0 );
+				break;
+			}
+		}
+		$links = $scope ? $ctx['xpath']->query( './/a[@href]', $scope ) : $ctx['xpath']->query( '//a[@href]' );
+		foreach ( $links as $a ) {
+			$href = $a->getAttribute( 'href' );
+			if ( ! preg_match( '#^https?://#i', $href ) ) {
 				continue;
 			}
-			if ( preg_match( '/(\.gov|\.edu|\.ac\.uk|doi\.org|ncbi\.nlm\.nih\.gov|pubmed|nih\.gov|who\.int|wikipedia\.org|orcid\.org|omim\.org|ensembl\.org|clinicalgenome\.org|uniprot\.org|genenames\.org|gnomad\.broadinstitute\.org|cochranelibrary\.com)/i', $host ) ) {
-				$sources++;
+			$host = strtolower( (string) wp_parse_url( $href, PHP_URL_HOST ) );
+			if ( '' === $host || $registrable( $host ) === $origin_reg ) {
+				continue;
+			}
+			if ( preg_match( $noncitation, $host ) ) {
+				continue;
+			}
+			$cited++;
+			if ( preg_match( $authority_re, $host ) ) {
+				$authority_cited++;
 			}
 		}
 	}
-	$has_sources = $sources >= 1;
+	$has_sources   = $cited >= 1;
+	$has_authority = $authority_cited >= 1;
 
 	$checks = array(
 		fmg_scan_check(
@@ -1100,11 +1189,19 @@ function fmg_scan_check_citability( $ctx ) {
 		),
 		fmg_scan_check(
 			'cite_sources',
-			'Claims backed by authoritative sources',
+			'Cites external sources',
 			$has_sources,
-			20,
-			'Link the claims that matter to primary or authoritative sources (.gov, .edu, journals, DOIs, and the databases that anchor your field). Pages that cite tend to get cited.',
-			$sources . ' authoritative source link(s)'
+			12,
+			'Back the claims that matter with outbound links to credible external sources. Pages that cite tend to get cited.',
+			$cited . ' external citation(s) in content'
+		),
+		fmg_scan_check(
+			'cite_authority',
+			'Cites a high-authority source',
+			$has_authority,
+			8,
+			'Where a claim can point to a primary or official source, government, academic, a standards body, a DOI, or a reference work, link it. These carry the most weight.',
+			$authority_cited . ' high-authority source(s)'
 		),
 	);
 
