@@ -5,12 +5,57 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Scanner: fine-print disclaimer**: results now close with a short note
+  that the free scan is informational, reads one page against fixed rules,
+  and cannot judge context, and that a full audit can reach different
+  findings. The same line closes the copied and emailed summary.
+- **Schema: founder credential**: the Person node now carries Kenneth's
+  degree as an EducationalOccupationalCredential (BS Human Communication,
+  Arizona State University), so engines have a verifiable expertise signal
+  to attach to the byline.
+- **Homepage freshness dates**: the homepage has no post of its own, so its
+  schema datePublished and dateModified, plus article:published_time and
+  article:modified_time meta tags, now anchor to real site activity: the
+  oldest published post and the most recently modified one. Both values
+  are filterable.
+
 ### Changed
 
 - **Updated date moved to the post footer**: the "Updated {date}" line now
   renders after the post content (left-aligned, meta styling) instead of in
   the byline, which now carries only author, publish date, and reading
   time. Schema dateModified is unchanged.
+- **Engine list names Google AI Overviews instead of Grok**: the AI
+  Visibility Audit description, the organization description in schema,
+  and llms.txt now list ChatGPT, Claude, Perplexity, Gemini, and Google AI
+  Overviews as the engines we test.
+- **Scanner: institutional-source check replaced**: the Citability check
+  that rewarded government, academic, and standards-body links is gone. It
+  penalized any market whose real authorities are vendors, manufacturers,
+  or practitioners. Its 8 points now reward citing the specific page that
+  makes a claim rather than a source's homepage, which any page in any
+  market can earn and which is what an engine needs to verify a citation.
+
+### Fixed
+
+- **Scanner: reviewer credit follows the schema**: the Citability expertise
+  check now credits `reviewedBy` only on WebPage nodes (and their subtypes),
+  where schema.org defines it. Previously it rewarded the property on any
+  node type, including Article and BlogPosting, where validators reject it.
+- **Scanner: admins bypass the hourly scan limit and the result cache**:
+  logged-in administrators are exempt from the per-IP throttle and always
+  get a fresh scan, so testing changes on your own site no longer burns
+  through the public allowance or waits out the 15-minute cache.
+
+### Security
+
+- **HSTS enabled**: TLS responses now carry a one-year Strict-Transport-Security
+  header, so browsers refuse to load the site over plain HTTP once they have
+  seen it. Subdomains are not included yet.
+- **PHP version fingerprint removed**: the X-Powered-By header no longer
+  reports the PHP version.
 
 ## [2.0.0] - 2026-08-23
 

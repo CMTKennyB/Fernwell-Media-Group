@@ -73,7 +73,8 @@ function fmg_scan_handle_request( $request ) {
 	}
 
 	$cache_key = 'fmg_scan_v2_' . md5( $url );
-	$cached    = get_transient( $cache_key );
+	// Admins always get a fresh scan; the public keeps the cached result window.
+	$cached = current_user_can( 'manage_options' ) ? false : get_transient( $cache_key );
 	if ( is_array( $cached ) ) {
 		$cached['cached'] = true;
 		return rest_ensure_response( $cached );
@@ -94,6 +95,11 @@ function fmg_scan_handle_request( $request ) {
  * @return true|WP_Error
  */
 function fmg_scan_check_rate_limit() {
+	// Site admins testing the scanner are not the traffic this throttles.
+	if ( current_user_can( 'manage_options' ) ) {
+		return true;
+	}
+
 	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
 	$key = 'fmg_rl_' . md5( $ip );
 	$hit = (int) get_transient( $key );
@@ -583,23 +589,38 @@ function fmg_scan_find_type( $nodes, $types ) {
  */
 function fmg_scan_find_node( $nodes, $exact, $suffixes = array() ) {
 	foreach ( $nodes as $node ) {
-		if ( empty( $node['@type'] ) ) {
-			continue;
-		}
-		foreach ( (array) $node['@type'] as $type ) {
-			$type = (string) $type;
-			if ( in_array( $type, $exact, true ) ) {
-				return $node;
-			}
-			foreach ( $suffixes as $suffix ) {
-				$len = strlen( $suffix );
-				if ( strlen( $type ) > $len && 0 === substr_compare( $type, $suffix, -$len ) ) {
-					return $node;
-				}
-			}
+		if ( fmg_scan_node_is( $node, $exact, $suffixes ) ) {
+			return $node;
 		}
 	}
 	return null;
+}
+
+/**
+ * Does one node's @type match an exact value or end with a suffix.
+ *
+ * @param array $node     JSON-LD node.
+ * @param array $exact    Exact @type values to match.
+ * @param array $suffixes @type suffixes to match.
+ * @return bool
+ */
+function fmg_scan_node_is( $node, $exact, $suffixes = array() ) {
+	if ( empty( $node['@type'] ) ) {
+		return false;
+	}
+	foreach ( (array) $node['@type'] as $type ) {
+		$type = (string) $type;
+		if ( in_array( $type, $exact, true ) ) {
+			return true;
+		}
+		foreach ( $suffixes as $suffix ) {
+			$len = strlen( $suffix );
+			if ( strlen( $type ) > $len && 0 === substr_compare( $type, $suffix, -$len ) ) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 /**
@@ -1077,11 +1098,14 @@ function fmg_scan_check_citability( $ctx ) {
 	};
 	$expertise_schema = false;
 	foreach ( $nodes as $node ) {
-		if ( ! empty( $node['reviewedBy'] ) || ! empty( $node['hasCredential'] ) ) {
+		// reviewedBy is defined on WebPage and its subtypes only. Credit it where
+		// a validator would, so the scan never rewards markup that fails validation.
+		$is_page = fmg_scan_node_is( $node, array( 'WebPage', 'RealEstateListing' ), array( 'Page' ) );
+		if ( ( $is_page && ! empty( $node['reviewedBy'] ) ) || ! empty( $node['hasCredential'] ) ) {
 			$expertise_schema = true;
 			break;
 		}
-		foreach ( array( 'author', 'reviewedBy', 'creator' ) as $rel ) {
+		foreach ( array( 'author', 'creator' ) as $rel ) {
 			if ( empty( $node[ $rel ] ) ) {
 				continue;
 			}
@@ -1115,8 +1139,8 @@ function fmg_scan_check_citability( $ctx ) {
 	}
 	$has_quotable = $quotable >= 5;
 
-	// 4. Sourced claims: does the content cite external sources at all, and are
-	//    any inherently authoritative. Behaviour-based, not an editorial allowlist.
+	// 4. Sourced claims: does the content cite external sources at all, and does
+	//    any citation point at a specific page an engine can verify.
 	$origin_host = strtolower( (string) wp_parse_url( $ctx['origin'], PHP_URL_HOST ) );
 	$registrable = function ( $host ) {
 		$host  = strtolower( (string) $host );
@@ -1126,11 +1150,10 @@ function fmg_scan_check_citability( $ctx ) {
 	$origin_reg = $registrable( $origin_host );
 	// Social, sharing, and asset/utility hosts are not citations.
 	$noncitation = '/(^|\.)(facebook|fb|twitter|linkedin|instagram|youtube|youtu|pinterest|tiktok|reddit|threads|whatsapp|fonts\.googleapis|fonts\.gstatic|gstatic|googletagmanager|google-analytics|doubleclick|gravatar|jsdelivr|unpkg|cloudfront)\./i';
-	// Authoritative by structure: government, academic, intergovernmental, and
-	// citation/standards/reference infrastructure. Industry-agnostic.
-	$authority_re = '/(\.gov(\.[a-z]{2})?|\.mil|\.edu|\.ac\.[a-z]{2}|\.int|(^|\.)(doi|orcid|arxiv|crossref|jstor|semanticscholar|w3|ietf|rfc-editor|iso|iana|unicode|wikipedia|wikidata|un|oecd|worldbank)\.|(^|\.)europa\.eu)/i';
-	$cited           = 0;
-	$authority_cited = 0;
+	// A citation an engine can verify points at the page that makes the claim,
+	// not a site's front door. Industry-agnostic and attainable by any market.
+	$cited          = 0;
+	$specific_cited = 0;
 	if ( $ctx['xpath'] ) {
 		$scope = null;
 		foreach ( array( '//main', '//article', '//*[@role="main"]' ) as $q ) {
@@ -1154,13 +1177,15 @@ function fmg_scan_check_citability( $ctx ) {
 				continue;
 			}
 			$cited++;
-			if ( preg_match( $authority_re, $host ) ) {
-				$authority_cited++;
+			$path = trim( (string) wp_parse_url( $href, PHP_URL_PATH ), '/' );
+			$deep = '' !== $path && ! preg_match( '/^index\.(html?|php)$/i', $path );
+			if ( $deep || wp_parse_url( $href, PHP_URL_QUERY ) || wp_parse_url( $href, PHP_URL_FRAGMENT ) ) {
+				$specific_cited++;
 			}
 		}
 	}
-	$has_sources   = $cited >= 1;
-	$has_authority = $authority_cited >= 1;
+	$has_sources  = $cited >= 1;
+	$has_specific = $specific_cited >= 1;
 
 	$checks = array(
 		fmg_scan_check(
@@ -1196,12 +1221,12 @@ function fmg_scan_check_citability( $ctx ) {
 			$cited . ' external citation(s) in content'
 		),
 		fmg_scan_check(
-			'cite_authority',
-			'Cites a high-authority source',
-			$has_authority,
+			'cite_specific',
+			'Cites the page, not the homepage',
+			$has_specific,
 			8,
-			'Where a claim can point to a primary or official source, government, academic, a standards body, a DOI, or a reference work, link it. These carry the most weight.',
-			$authority_cited . ' high-authority source(s)'
+			'Link the page where the source makes the claim, not the site it lives on. An engine verifies a citation at a URL, and a bare homepage gives it nothing to check. If the claim really lives on a homepage, link the section with a fragment. One specific citation on the page is enough.',
+			$specific_cited . ' citation(s) to a specific page'
 		),
 	);
 
@@ -1371,6 +1396,7 @@ function fmg_scan_css() {
 .fmg-scan__submit:disabled { opacity: .6; cursor: progress; }
 .fmg-scan__submit:focus-visible { outline: 3px solid var(--fmg-accent); outline-offset: 2px; }
 .fmg-scan__note { margin: 14px 0 0; font-size: .9rem; color: var(--fmg-ink-soft); max-width: 60ch; }
+.fmg-scan__fine { margin: 18px 0 0; font-size: .8rem; color: var(--fmg-ink-soft); max-width: 60ch; }
 .fmg-scan__status { margin-top: 18px; font-size: .95rem; color: var(--fmg-ink-soft); }
 .fmg-scan__status[data-state="error"] { color: var(--fmg-fail); font-weight: 500; }
 
@@ -1561,7 +1587,8 @@ function fmg_scan_js() {
     var html = scoreCard(data.readability, 'Readability', meta)
       + catsHtml(data.readability.categories)
       + scoreCard(data.citability, 'Citability', '')
-      + catsHtml(data.citability.categories);
+      + catsHtml(data.citability.categories)
+      + '<p class="fmg-scan__fine">This free scan is informational. It reads one page against fixed rules and cannot judge context, so a check can miss a signal that is right for your page. A full Fernwell Media Group audit measures more, and its findings can differ.</p>';
 
     html += ''
       + '<div class="fmg-cta">'
@@ -1634,6 +1661,8 @@ function fmg_scan_js() {
     lines.push('1.');
     lines.push('2.');
     lines.push('3.');
+    lines.push('');
+    lines.push('This free scan is informational. A full audit measures more, and its findings can differ.');
 
     return lines.join('\n');
   }

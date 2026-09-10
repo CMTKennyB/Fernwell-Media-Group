@@ -427,8 +427,6 @@ function fernwell_schema() {
 		),
 	);
 
-	$reviewer_id = apply_filters( 'fernwell_reviewedby_id', $base . '#kenneth' );
-
 	$graph = array(
 		array(
 			'@type'         => 'ProfessionalService',
@@ -473,7 +471,7 @@ function fernwell_schema() {
 				'@type'              => 'EducationalOccupationalCredential',
 				'credentialCategory' => 'degree',
 				'educationalLevel'   => 'Bachelor of Science',
-				'name'               => 'B.S. in Human Communication',
+				'name'               => 'BS Human Communication',
 				'recognizedBy'       => array(
 					'@type' => 'CollegeOrUniversity',
 					'name'  => 'Arizona State University',
@@ -495,7 +493,6 @@ function fernwell_schema() {
 			'name'       => wp_get_document_title(),
 			'isPartOf'   => array( '@id' => $base . '#website' ),
 			'about'      => array( '@id' => $base . '#org' ),
-			'reviewedBy' => array( '@id' => $reviewer_id ),
 			'inLanguage' => 'en-US',
 		),
 	);
@@ -622,7 +619,6 @@ function fernwell_schema() {
 			'datePublished'    => get_the_date( 'c', $post ),
 			'dateModified'     => get_the_modified_date( 'c', $post ),
 			'author'           => array( '@id' => $base . '#kenneth' ),
-			'reviewedBy'       => array( '@id' => $reviewer_id ),
 			'publisher'        => array( '@id' => $base . '#org' ),
 			'isPartOf'         => array( '@id' => $answers_url . '#blog' ),
 			'mainEntityOfPage' => array( '@id' => $current_url . '#webpage' ),

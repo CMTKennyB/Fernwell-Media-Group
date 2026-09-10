@@ -14,17 +14,21 @@
 defined( 'ABSPATH' ) || exit;
 
 /*
- * Security headers on every front-end response. HSTS is left to the host
- * (the host manages TLS termination); clickjacking, MIME sniffing, referrer
- * leakage, and unneeded browser APIs are closed here.
+ * Security headers on every front-end response: HSTS on TLS responses,
+ * clickjacking, MIME sniffing, referrer leakage, and unneeded browser APIs
+ * closed, and the PHP version fingerprint removed.
  */
 add_action(
 	'send_headers',
 	function () {
+		if ( is_ssl() ) {
+			header( 'Strict-Transport-Security: max-age=31536000' );
+		}
 		header( 'X-Content-Type-Options: nosniff' );
 		header( 'X-Frame-Options: SAMEORIGIN' );
 		header( 'Referrer-Policy: strict-origin-when-cross-origin' );
 		header( 'Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()' );
+		header_remove( 'X-Powered-By' );
 	}
 );
 
