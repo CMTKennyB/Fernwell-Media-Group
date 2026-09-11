@@ -5,6 +5,154 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-11
+
+The site stands up its own machine surfaces (XML sitemap, robots.txt,
+llms.txt), measures visitors behind consent, and starts building a scanner
+dataset. Theme 2.1.0, FMG AEO 0.1.0 (new), FMG Analytics 1.0.0 (new),
+Scanner 1.2.0, Hardening 1.1.0.
+
+### Added
+
+- **Scanner: score log and Tools > Scan Scores (scanner 1.2.0)**: every
+  fresh, successful public scan now records an anonymous row, the two
+  scores plus each category's earned/max and each check's pass/fail, with
+  no URL, host, or IP. Cached repeats, admin test scans, and scans of this
+  site are left out. The admin page shows the count and date range, mean
+  and median for both axes, ten-point distributions, average by category,
+  pass rate by check sorted hardest first, an all-time or 30-day window,
+  and a CSV export of the raw rows.
+- **FMG Analytics mu-plugin (1.0.0)**: Google Analytics 4 for the site,
+  wired through consent rather than around it. The tag is printed in
+  WPConsent's blocked form under the statistics category, so nothing is
+  fetched or run until the visitor opts in; WPConsent then loads it and
+  pushes the Google Consent Mode update. Production only, site admins
+  excluded, IP anonymization on.
+- **Schema: post image**: the BlogPosting node now carries an ImageObject,
+  the same picture og:image uses (the metabox social image if set, else
+  the Fernwell Answers card), so the Article rich result has the one
+  recommended field it was missing.
+- **Schema: organization image**: the ProfessionalService node carries the
+  FMG card as its image, the one recommended LocalBusiness field worth
+  having; address, telephone, and priceRange stay out on purpose.
+- **Sitemap page**: `/sitemap/` lists every page on the site in one place:
+  the homepage and its sections, every indexable answer, the legal pages,
+  and the machine-readable feeds (XML sitemap, llms.txt, RSS). It is built
+  from the site at request time, so new answers appear without upkeep, and
+  it is linked from the footer and llms.txt. Slug-matched template, same
+  convention as the legal pages.
+- **FMG AEO mu-plugin (0.1.0)**: the seed of the Fernwell AEO plugin. Today
+  it owns the XML sitemap: core's `wp-sitemap.xml` is retired (its URLs 301
+  to the new one), `/sitemap.xml` is served by the plugin with an
+  FMG-branded stylesheet at `/sitemap.xsl` so it reads cleanly in a
+  browser, and robots.txt declares it. Rewrite rules flush themselves once
+  per plugin version, so deploys need no permalink save. It also serves a
+  curated robots.txt through the core filter:
+  search, AI, answer-engine, and training crawlers welcomed by
+  name, admin and internal search kept out of the crawl, parasitic SEO
+  scrapers and the ads crawler turned away, llms.txt pointed to in the
+  header. The "Discourage search engines" setting is honored. The plugin is
+  generic and exposes filters; the theme hooks in the site-specific rules:
+  posts opted out of indexing in the Search & Social metabox (noindex, or
+  a canonical pointing elsewhere) are left out, the homepage reports the
+  same dateModified its schema does, and the Answers listing and sitemap
+  page report the newer of the page itself or the most recently modified
+  answer.
+- **Scanner: fine-print disclaimer**: results now close with a short note
+  that the free scan is informational, reads one page against fixed rules,
+  and cannot judge context, and that a full audit can reach different
+  findings. The same line closes the copied and emailed summary.
+- **Schema: founder credential**: the Person node now carries Kenneth's
+  degree as an EducationalOccupationalCredential (BS Human Communication,
+  Arizona State University), so engines have a verifiable expertise signal
+  to attach to the byline.
+- **Homepage freshness dates**: the homepage has no post of its own, so its
+  schema datePublished and dateModified, plus article:published_time and
+  article:modified_time meta tags, now anchor to real site activity: the
+  oldest published post and the most recently modified one. Both values
+  are filterable.
+
+### Changed
+
+- **Inset pipe replaces the edge stroke, and becomes house style**: the
+  homepage answer-first box now has even corners and a thin, soft accent
+  bar inside its padding (2px, accent green at 40%), in place of the green
+  border on its left edge and the one-sided radius that went with it. The
+  treatment is a reusable `.inset-pipe` class for any panel that wants an
+  accent, documented in the README design system. Padding and the bar's
+  inset tighten on small screens.
+- **Head links trimmed**: the comments feed link (comments are hard-off)
+  and the shortlink plus its Link header (permalinks are already short)
+  are gone from every page.
+- **Third-party front-end CSS trimmed**: the WordPress AI plugin bundled
+  by the host enqueued its summarization block stylesheet on every public
+  page. The theme now dequeues it on the front end; the plugin stays active
+  for the editor.
+- **Emoji plumbing removed**: the site uses no emoji, so WordPress's
+  detection module, its settings block, the inline CSS, and the s.w.org
+  prefetch no longer ship on any page.
+- **Schema: the series is enumerated on the listing only**: the Blog node's
+  blogPost list of every published answer now appears on the Answers
+  listing and not on single posts, which point up through isPartOf. On a
+  post page the other posts were bare @id references that the Rich
+  Results Test flagged as unnamed articles, and the list grew with every
+  post published.
+- **Updated date moved to the post footer**: the "Updated {date}" line now
+  renders after the post content (left-aligned, meta styling) instead of in
+  the byline, which now carries only author, publish date, and reading
+  time. Schema dateModified is unchanged.
+- **Engine list names Google AI Overviews instead of Grok**: the AI
+  Visibility Audit description, the organization description in schema,
+  and llms.txt now list ChatGPT, Claude, Perplexity, Gemini, and Google AI
+  Overviews as the engines we test.
+- **Scanner: institutional-source check replaced**: the Citability check
+  that rewarded government, academic, and standards-body links is gone. It
+  penalized any market whose real authorities are vendors, manufacturers,
+  or practitioners. Its 8 points now reward citing the specific page that
+  makes a claim rather than a source's homepage, which any page in any
+  market can earn and which is what an engine needs to verify a citation.
+
+### Fixed
+
+- **Modified dates never precede publish dates**: a scheduled post carries
+  a modified stamp from before it went live, so its schema dateModified
+  and sitemap lastmod said it changed days before it existed. Both now use
+  the later of the two dates, and the homepage's freshness date counts a
+  scheduled post from its publish day. The visible "Updated" line keeps
+  its own rule and is unchanged.
+- **Answers listing declares its canonical**: WordPress emits rel=canonical
+  only on singular pages, so the Fernwell Answers listing had none even
+  though its og:url and schema already named the URL. It now declares the
+  listing URL, and paginated pages declare themselves.
+- **llms.txt served without a redirect**: `/llms.txt` was 301ing to
+  `/llms.txt/` on every environment, including production, because
+  WordPress's canonical redirect treated the request as the front page and
+  added a trailing slash before the theme's handler ran. The bare path now
+  serves directly, and the slashed form redirects back to it, the same way
+  core handles robots.txt.
+- **Scanner: reviewer credit follows the schema**: the Citability expertise
+  check now credits `reviewedBy` only on WebPage nodes (and their subtypes),
+  where schema.org defines it. Previously it rewarded the property on any
+  node type, including Article and BlogPosting, where validators reject it.
+- **Scanner: admins bypass the hourly scan limit and the result cache**:
+  logged-in administrators are exempt from the per-IP throttle and always
+  get a fresh scan, so testing changes on your own site no longer burns
+  through the public allowance or waits out the 15-minute cache.
+
+### Security
+
+- **XML-RPC goes silent**: the endpoint already had every usable method
+  removed, but WordPress re-adds three introspection methods after the
+  filter, so a probe still got a 200 and a method list. Any XML-RPC
+  request now gets a bare 403 at init, before the server class loads, and
+  the head no longer advertises the endpoint through the EditURI/RSD link.
+  Hardening mu-plugin 1.1.0.
+- **HSTS enabled**: TLS responses now carry a one-year Strict-Transport-Security
+  header, so browsers refuse to load the site over plain HTTP once they have
+  seen it. Subdomains are not included yet.
+- **PHP version fingerprint removed**: the X-Powered-By header no longer
+  reports the PHP version.
+
 ## [2.0.0] - 2026-08-23
 
 ### Added

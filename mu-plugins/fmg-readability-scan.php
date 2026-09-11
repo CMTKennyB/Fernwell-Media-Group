@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: FMG AI Readability & Citability Scanner
- * Description: Deterministic single-URL scan scoring whether AI engines can read a site (Readability) and whether its pages are shaped to be cited (Citability). Shortcode: [fmg_readability_scan]
- * Version:     1.1.0
+ * Description: Deterministic single-URL scan scoring whether AI engines can read a site (Readability) and whether its pages are shaped to be cited (Citability). Shortcode: [fmg_readability_scan]. Logs anonymous scores for the Tools > Scan Scores dataset.
+ * Version:     1.2.0
  * Author:      Fernwell Media Group
  *
  * Drop this file directly into wp-content/mu-plugins/ (no subfolder: mu-plugins
@@ -73,7 +73,8 @@ function fmg_scan_handle_request( $request ) {
 	}
 
 	$cache_key = 'fmg_scan_v2_' . md5( $url );
-	$cached    = get_transient( $cache_key );
+	// Admins always get a fresh scan; the public keeps the cached result window.
+	$cached = current_user_can( 'manage_options' ) ? false : get_transient( $cache_key );
 	if ( is_array( $cached ) ) {
 		$cached['cached'] = true;
 		return rest_ensure_response( $cached );
@@ -85,8 +86,277 @@ function fmg_scan_handle_request( $request ) {
 	}
 
 	set_transient( $cache_key, $result, FMG_SCAN_CACHE_TTL );
+	fmg_scan_log_result( $result );
 	return rest_ensure_response( $result );
 }
+
+/*
+|--------------------------------------------------------------------------
+| Score log
+|--------------------------------------------------------------------------
+| An anonymous dataset of scan outcomes for developing the tool: one row per
+| fresh, successful, public scan with the two scores, each category's
+| earned/max, and each check's pass/fail. No URL, host, or IP is stored.
+| Cached repeats, admin test scans, and scans of this site itself are left
+| out so the numbers describe the market, not the tool's own benchmarks.
+*/
+
+/** Bump when the table shape changes; the table is created or altered on the next request. */
+const FMG_SCAN_LOG_DB_VERSION = '1';
+
+function fmg_scan_log_table() {
+	global $wpdb;
+	return $wpdb->prefix . 'fmg_scan_log';
+}
+
+function fmg_scan_log_install() {
+	if ( get_option( 'fmg_scan_log_db_version' ) === FMG_SCAN_LOG_DB_VERSION ) {
+		return;
+	}
+	global $wpdb;
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	$table   = fmg_scan_log_table();
+	$charset = $wpdb->get_charset_collate();
+	dbDelta(
+		"CREATE TABLE {$table} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			scanned_at datetime NOT NULL,
+			readability tinyint(3) unsigned NOT NULL,
+			citability tinyint(3) unsigned NOT NULL,
+			categories text NOT NULL,
+			checks text NOT NULL,
+			PRIMARY KEY  (id),
+			KEY scanned_at (scanned_at)
+		) {$charset};"
+	);
+	update_option( 'fmg_scan_log_db_version', FMG_SCAN_LOG_DB_VERSION );
+}
+add_action( 'init', 'fmg_scan_log_install' );
+
+/**
+ * Whether this result belongs in the dataset. Filterable.
+ */
+function fmg_scan_log_should_log( $result ) {
+	$log = ! current_user_can( 'manage_options' );
+	$own = strtolower( (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST ) );
+	$hit = strtolower( (string) ( $result['host'] ?? '' ) );
+	if ( $own && ( $hit === $own || $hit === 'www.' . $own || 'www.' . $hit === $own ) ) {
+		$log = false;
+	}
+	return (bool) apply_filters( 'fmg_scan_log_enabled', $log, $result );
+}
+
+/**
+ * Record a fresh result. Never lets a logging problem break the scan.
+ */
+function fmg_scan_log_result( $result ) {
+	if ( ! is_array( $result ) || ! fmg_scan_log_should_log( $result ) ) {
+		return;
+	}
+	global $wpdb;
+	$categories = array();
+	$checks     = array();
+	$labels     = get_option( 'fmg_scan_check_labels', array() );
+	foreach ( array( 'readability', 'citability' ) as $axis ) {
+		foreach ( (array) ( $result[ $axis ]['categories'] ?? array() ) as $key => $cat ) {
+			$categories[ $key ] = array( 'earned' => (int) ( $cat['earned'] ?? 0 ), 'max' => (int) ( $cat['max'] ?? 0 ) );
+			foreach ( (array) ( $cat['checks'] ?? array() ) as $check ) {
+				$checks[ $check['id'] ]         = $check['pass'] ? 1 : 0;
+				$labels[ $check['id'] ]         = array( 'label' => $check['label'], 'category' => $cat['label'], 'weight' => (int) $check['weight'] );
+			}
+		}
+	}
+	$wpdb->insert(
+		fmg_scan_log_table(),
+		array(
+			'scanned_at'  => gmdate( 'Y-m-d H:i:s' ),
+			'readability' => (int) $result['readability']['score'],
+			'citability'  => (int) $result['citability']['score'],
+			'categories'  => wp_json_encode( $categories ),
+			'checks'      => wp_json_encode( $checks ),
+		),
+		array( '%s', '%d', '%d', '%s', '%s' )
+	);
+	update_option( 'fmg_scan_check_labels', $labels, false );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Admin: Tools > Scan Scores
+|--------------------------------------------------------------------------
+*/
+
+add_action(
+	'admin_menu',
+	function () {
+		add_management_page( 'Scan Scores', 'Scan Scores', 'manage_options', 'fmg-scan-scores', 'fmg_scan_log_page' );
+	}
+);
+
+/**
+ * Rows for a window: 'all' or a number of days.
+ */
+function fmg_scan_log_rows( $window ) {
+	global $wpdb;
+	$table = fmg_scan_log_table();
+	if ( 'all' === $window ) {
+		return $wpdb->get_results( "SELECT scanned_at, readability, citability, categories, checks FROM {$table} ORDER BY scanned_at ASC", ARRAY_A );
+	}
+	return $wpdb->get_results(
+		$wpdb->prepare( "SELECT scanned_at, readability, citability, categories, checks FROM {$table} WHERE scanned_at >= %s ORDER BY scanned_at ASC", gmdate( 'Y-m-d H:i:s', time() - (int) $window * DAY_IN_SECONDS ) ),
+		ARRAY_A
+	);
+}
+
+function fmg_scan_log_median( $values ) {
+	sort( $values );
+	$n = count( $values );
+	if ( ! $n ) {
+		return 0;
+	}
+	$mid = (int) floor( $n / 2 );
+	return $n % 2 ? $values[ $mid ] : ( $values[ $mid - 1 ] + $values[ $mid ] ) / 2;
+}
+
+function fmg_scan_log_page() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	$window = isset( $_GET['window'] ) && '30' === $_GET['window'] ? '30' : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$rows   = fmg_scan_log_rows( $window );
+	$labels = get_option( 'fmg_scan_check_labels', array() );
+	$n      = count( $rows );
+
+	$read = array_map( 'intval', array_column( $rows, 'readability' ) );
+	$cite = array_map( 'intval', array_column( $rows, 'citability' ) );
+
+	// Distribution in ten-point bands, per-category averages, per-check pass rates.
+	$bands = array( 'readability' => array_fill( 0, 10, 0 ), 'citability' => array_fill( 0, 10, 0 ) );
+	$cats  = array();
+	$pass  = array();
+	foreach ( $rows as $row ) {
+		$bands['readability'][ min( 9, (int) floor( $row['readability'] / 10 ) ) ]++;
+		$bands['citability'][ min( 9, (int) floor( $row['citability'] / 10 ) ) ]++;
+		foreach ( (array) json_decode( $row['categories'], true ) as $key => $c ) {
+			$cats[ $key ]['earned'] = ( $cats[ $key ]['earned'] ?? 0 ) + $c['earned'];
+			$cats[ $key ]['max']    = ( $cats[ $key ]['max'] ?? 0 ) + $c['max'];
+		}
+		foreach ( (array) json_decode( $row['checks'], true ) as $id => $p ) {
+			$pass[ $id ]['n'] = ( $pass[ $id ]['n'] ?? 0 ) + 1;
+			$pass[ $id ]['p'] = ( $pass[ $id ]['p'] ?? 0 ) + (int) $p;
+		}
+	}
+	uasort( $pass, function ( $a, $b ) { return ( $a['p'] / max( 1, $a['n'] ) ) <=> ( $b['p'] / max( 1, $b['n'] ) ); } );
+
+	$base       = admin_url( 'tools.php?page=fmg-scan-scores' );
+	$export_url = wp_nonce_url( admin_url( 'admin-post.php?action=fmg_scan_log_export&window=' . $window ), 'fmg_scan_log_export' );
+	$stat       = function ( $values ) {
+		return $values ? sprintf( 'mean %s, median %s, range %d to %d', number_format_i18n( array_sum( $values ) / count( $values ), 1 ), number_format_i18n( fmg_scan_log_median( $values ), 1 ), min( $values ), max( $values ) ) : 'no scans yet';
+	};
+	?>
+	<div class="wrap fmg-scores">
+		<h1>Scan Scores</h1>
+		<p class="description">Anonymous outcomes of public scans: scores and check results only, no URLs. Cached repeats, admin test scans, and scans of this site are not counted.</p>
+		<p>
+			<a class="button<?php echo 'all' === $window ? ' button-primary' : ''; ?>" href="<?php echo esc_url( $base ); ?>">All time</a>
+			<a class="button<?php echo '30' === $window ? ' button-primary' : ''; ?>" href="<?php echo esc_url( $base . '&window=30' ); ?>">Last 30 days</a>
+			<?php if ( $n ) : ?><a class="button" href="<?php echo esc_url( $export_url ); ?>">Export CSV</a><?php endif; ?>
+		</p>
+
+		<h2><?php echo esc_html( number_format_i18n( $n ) ); ?> scan<?php echo 1 === $n ? '' : 's'; ?><?php if ( $n ) : ?>, <?php echo esc_html( wp_date( 'M j, Y', strtotime( $rows[0]['scanned_at'] ) ) ); ?> to <?php echo esc_html( wp_date( 'M j, Y', strtotime( end( $rows )['scanned_at'] ) ) ); ?><?php endif; ?></h2>
+
+		<div class="fmg-scores__grid">
+			<?php foreach ( array( 'readability' => $read, 'citability' => $cite ) as $axis => $values ) : ?>
+			<div class="fmg-scores__axis">
+				<h3><?php echo esc_html( ucfirst( $axis ) ); ?></h3>
+				<p><?php echo esc_html( $stat( $values ) ); ?></p>
+				<table class="widefat striped fmg-scores__bands">
+					<tbody>
+					<?php for ( $b = 9; $b >= 0; $b-- ) : $count = $bands[ $axis ][ $b ]; ?>
+						<tr>
+							<th scope="row"><?php echo esc_html( 9 === $b ? '90 to 100' : ( $b * 10 ) . ' to ' . ( $b * 10 + 9 ) ); ?></th>
+							<td class="fmg-scores__bar"><?php if ( $count ) : ?><span style="width:<?php echo esc_attr( round( $count / $n * 100 ) ); ?>%"></span><?php endif; ?></td>
+							<td class="fmg-scores__n"><?php echo esc_html( number_format_i18n( $count ) ); ?></td>
+						</tr>
+					<?php endfor; ?>
+					</tbody>
+				</table>
+			</div>
+			<?php endforeach; ?>
+		</div>
+
+		<?php if ( $cats ) : ?>
+		<h3>Average by category</h3>
+		<table class="widefat striped fmg-scores__table">
+			<thead><tr><th>Category</th><th>Average earned</th><th>Of</th><th>Rate</th></tr></thead>
+			<tbody>
+			<?php foreach ( $cats as $key => $c ) : ?>
+				<tr>
+					<td><?php echo esc_html( ucfirst( $key ) ); ?></td>
+					<td><?php echo esc_html( number_format_i18n( $c['earned'] / max( 1, $n ), 1 ) ); ?></td>
+					<td><?php echo esc_html( number_format_i18n( $c['max'] / max( 1, $n ), 0 ) ); ?></td>
+					<td><?php echo esc_html( number_format_i18n( $c['max'] ? $c['earned'] / $c['max'] * 100 : 0, 0 ) ); ?>%</td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php endif; ?>
+
+		<?php if ( $pass ) : ?>
+		<h3>Pass rate by check, hardest first</h3>
+		<p class="description">A check most sites fail is either the signal that matters most or a check that needs another look.</p>
+		<table class="widefat striped fmg-scores__table">
+			<thead><tr><th>Check</th><th>Category</th><th>Weight</th><th>Passed</th><th>Rate</th></tr></thead>
+			<tbody>
+			<?php foreach ( $pass as $id => $p ) : $meta = $labels[ $id ] ?? array(); ?>
+				<tr>
+					<td><?php echo esc_html( $meta['label'] ?? $id ); ?></td>
+					<td><?php echo esc_html( $meta['category'] ?? '' ); ?></td>
+					<td><?php echo esc_html( $meta['weight'] ?? '' ); ?></td>
+					<td><?php echo esc_html( number_format_i18n( $p['p'] ) . ' of ' . number_format_i18n( $p['n'] ) ); ?></td>
+					<td><?php echo esc_html( number_format_i18n( $p['p'] / max( 1, $p['n'] ) * 100, 0 ) ); ?>%</td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php endif; ?>
+	</div>
+	<style>
+		.fmg-scores__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 900px; margin: 12px 0 24px; }
+		.fmg-scores__axis h3 { margin-bottom: 4px; }
+		.fmg-scores__bands th { width: 90px; font-weight: 500; }
+		.fmg-scores__bar { width: auto; }
+		.fmg-scores__bar span { display: block; height: 14px; min-width: 2px; background: #156a58; border-radius: 3px; }
+		.fmg-scores__n { width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+		.fmg-scores__table { max-width: 900px; margin-bottom: 24px; }
+	</style>
+	<?php
+}
+
+/**
+ * CSV export of the raw rows for the selected window. Admin only, nonced.
+ */
+add_action(
+	'admin_post_fmg_scan_log_export',
+	function () {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Not allowed.' );
+		}
+		check_admin_referer( 'fmg_scan_log_export' );
+		$window = isset( $_GET['window'] ) && '30' === $_GET['window'] ? '30' : 'all';
+		$rows   = fmg_scan_log_rows( $window );
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="fmg-scan-scores-' . $window . '-' . gmdate( 'Y-m-d' ) . '.csv"' );
+		$out = fopen( 'php://output', 'w' );
+		fputcsv( $out, array( 'scanned_at_utc', 'readability', 'citability', 'categories_json', 'checks_json' ) );
+		foreach ( $rows as $row ) {
+			fputcsv( $out, array( $row['scanned_at'], $row['readability'], $row['citability'], $row['categories'], $row['checks'] ) );
+		}
+		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		exit;
+	}
+);
 
 /**
  * Throttle by IP.
@@ -94,6 +364,11 @@ function fmg_scan_handle_request( $request ) {
  * @return true|WP_Error
  */
 function fmg_scan_check_rate_limit() {
+	// Site admins testing the scanner are not the traffic this throttles.
+	if ( current_user_can( 'manage_options' ) ) {
+		return true;
+	}
+
 	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
 	$key = 'fmg_rl_' . md5( $ip );
 	$hit = (int) get_transient( $key );
@@ -572,6 +847,52 @@ function fmg_scan_find_type( $nodes, $types ) {
 }
 
 /**
+ * Find the first node whose @type matches an exact value or ends with a suffix.
+ * Suffix matching credits schema.org subtypes (OnlineStore, AutomotiveBusiness,
+ * NewsArticle, ...) without enumerating the entire type hierarchy.
+ *
+ * @param array $nodes    JSON-LD nodes.
+ * @param array $exact    Exact @type values to match.
+ * @param array $suffixes @type suffixes to match (e.g. 'Business', 'Article').
+ * @return array|null
+ */
+function fmg_scan_find_node( $nodes, $exact, $suffixes = array() ) {
+	foreach ( $nodes as $node ) {
+		if ( fmg_scan_node_is( $node, $exact, $suffixes ) ) {
+			return $node;
+		}
+	}
+	return null;
+}
+
+/**
+ * Does one node's @type match an exact value or end with a suffix.
+ *
+ * @param array $node     JSON-LD node.
+ * @param array $exact    Exact @type values to match.
+ * @param array $suffixes @type suffixes to match.
+ * @return bool
+ */
+function fmg_scan_node_is( $node, $exact, $suffixes = array() ) {
+	if ( empty( $node['@type'] ) ) {
+		return false;
+	}
+	foreach ( (array) $node['@type'] as $type ) {
+		$type = (string) $type;
+		if ( in_array( $type, $exact, true ) ) {
+			return true;
+		}
+		foreach ( $suffixes as $suffix ) {
+			$len = strlen( $suffix );
+			if ( strlen( $type ) > $len && 0 === substr_compare( $type, $suffix, -$len ) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+/**
  * Build one check row.
  *
  * @param string $id     Slug.
@@ -609,9 +930,17 @@ function fmg_scan_check( $id, $label, $pass, $weight, $fix, $detail = '' ) {
 function fmg_scan_check_entity( $ctx ) {
 	$nodes = $ctx['jsonld'];
 
-	$org = fmg_scan_find_type(
+	$org = fmg_scan_find_node(
 		$nodes,
-		array( 'Organization', 'LocalBusiness', 'ProfessionalService', 'Corporation', 'NGO', 'Person' )
+		array(
+			'Person', 'Organization', 'LocalBusiness', 'Corporation', 'NGO', 'NonprofitOrganization',
+			'GovernmentOrganization', 'EducationalOrganization', 'CollegeOrUniversity', 'School',
+			'NewsMediaOrganization', 'ResearchOrganization', 'MedicalOrganization', 'Hospital',
+			'ProfessionalService', 'FinancialService', 'LegalService', 'RealEstateAgent',
+			'Store', 'OnlineStore', 'OnlineBusiness', 'Restaurant', 'FoodEstablishment',
+			'LodgingBusiness', 'Hotel', 'TravelAgency', 'Airline',
+		),
+		array( 'Business', 'Organization' )
 	);
 
 	$same_as = array();
@@ -880,18 +1209,17 @@ function fmg_scan_check_structure( $ctx ) {
 	$desc     = fmg_scan_meta( $ctx, 'description', 'name' );
 	$desc_len = strlen( $desc );
 
-	$qa = fmg_scan_find_type(
+	$qa = fmg_scan_find_node(
 		$ctx['jsonld'],
 		array(
-			// Generic content types.
-			'FAQPage', 'QAPage', 'Article', 'BlogPosting', 'HowTo', 'Service', 'Product',
-			// Medical content types: a health page declaring what kind of answer
-			// it holds. Counted for citability already; credited here too so
-			// medical sites are not penalised for using the correct schema.
+			// Content and answer types, industry-agnostic.
+			'Article', 'NewsArticle', 'ScholarlyArticle', 'TechArticle', 'Report',
+			'BlogPosting', 'LiveBlogPosting', 'FAQPage', 'QAPage', 'Question',
+			'HowTo', 'Recipe', 'Review', 'Service', 'Product', 'Course', 'Event', 'Dataset',
+			// Medical content types remain valid members of the set, not its flavor.
 			'MedicalWebPage', 'MedicalCondition', 'MedicalScholarlyArticle', 'MedicalGuideline', 'Drug',
-			// Dataset: research/data pages (e.g. a DOI-anchored dataset).
-			'Dataset',
-		)
+		),
+		array( 'Article', 'Posting' )
 	);
 
 	$checks = array(
@@ -1023,21 +1351,44 @@ function fmg_scan_check_citability( $ctx ) {
 		: ( $person ? 'Person markup present'
 		: ( $byline ? 'Byline found in page markup' : 'No author or byline found' ) );
 
-	// 2. Expertise / E-E-A-T signals.
+	// 2. Expertise / E-E-A-T signals. Resolve @id references so a referenced
+	//    author or reviewer's credentials count, not only inline objects.
+	$by_id = array();
+	foreach ( $nodes as $node ) {
+		if ( ! empty( $node['@id'] ) ) {
+			$by_id[ $node['@id'] ] = $node;
+		}
+	}
+	$resolve_ref = function ( $ref ) use ( $by_id ) {
+		if ( is_array( $ref ) && isset( $ref['@id'] ) && isset( $by_id[ $ref['@id'] ] ) ) {
+			return $by_id[ $ref['@id'] ];
+		}
+		return is_array( $ref ) ? $ref : null;
+	};
 	$expertise_schema = false;
 	foreach ( $nodes as $node ) {
-		if ( ! empty( $node['reviewedBy'] ) || ! empty( $node['hasCredential'] )
-			|| ( isset( $node['author']['jobTitle'] ) && '' !== $node['author']['jobTitle'] ) ) {
+		// reviewedBy is defined on WebPage and its subtypes only. Credit it where
+		// a validator would, so the scan never rewards markup that fails validation.
+		$is_page = fmg_scan_node_is( $node, array( 'WebPage', 'RealEstateListing' ), array( 'Page' ) );
+		if ( ( $is_page && ! empty( $node['reviewedBy'] ) ) || ! empty( $node['hasCredential'] ) ) {
 			$expertise_schema = true;
 			break;
 		}
+		foreach ( array( 'author', 'creator' ) as $rel ) {
+			if ( empty( $node[ $rel ] ) ) {
+				continue;
+			}
+			$who = $resolve_ref( $node[ $rel ] );
+			if ( is_array( $who ) && ( ! empty( $who['jobTitle'] ) || ! empty( $who['hasCredential'] ) ) ) {
+				$expertise_schema = true;
+				break 2;
+			}
+		}
 	}
-	$med            = fmg_scan_find_type( $nodes, array( 'MedicalWebPage', 'MedicalScholarlyArticle' ) );
-	$expertise_text = (bool) preg_match( '/\b(medically reviewed|reviewed by|fact[- ]checked|board[- ]certified|Ph\.?\s?D|M\.?\s?D\.?|M\.?Sc|R\.?N\.?)\b/i', $body );
-	$has_expertise  = $expertise_schema || (bool) $med || $expertise_text;
+	$expertise_text = (bool) preg_match( '/\b(reviewed by|fact[- ]checked|edited by|board[- ]certified|licensed|accredited|certified|Ph\.?\s?D|M\.?\s?D|M\.?Sc|M\.?B\.?A|J\.?D|LL\.?M|C\.?P\.?A|C\.?F\.?A|P\.?E\.?|Esq|R\.?N)\b/i', $body );
+	$has_expertise  = $expertise_schema || $expertise_text;
 	$exp_detail     = $expertise_schema ? 'Credentials or reviewer in structured data'
-		: ( $med ? 'Medical content markup present'
-		: ( $expertise_text ? 'Credential or review language on the page' : 'No expertise or review signals found' ) );
+		: ( $expertise_text ? 'Credential or review language on the page' : 'No expertise or review signals found' );
 
 	// 3. Quotable-claim density: self-contained sentences an engine could lift.
 	$sentences = preg_split( '/(?<=[.!?])\s+/', $body );
@@ -1057,21 +1408,53 @@ function fmg_scan_check_citability( $ctx ) {
 	}
 	$has_quotable = $quotable >= 5;
 
-	// 4. Sourced claims: outbound links to authoritative sources.
-	$origin_host = (string) wp_parse_url( $ctx['origin'], PHP_URL_HOST );
-	$sources     = 0;
+	// 4. Sourced claims: does the content cite external sources at all, and does
+	//    any citation point at a specific page an engine can verify.
+	$origin_host = strtolower( (string) wp_parse_url( $ctx['origin'], PHP_URL_HOST ) );
+	$registrable = function ( $host ) {
+		$host  = strtolower( (string) $host );
+		$parts = explode( '.', $host );
+		return count( $parts ) >= 2 ? implode( '.', array_slice( $parts, -2 ) ) : $host;
+	};
+	$origin_reg = $registrable( $origin_host );
+	// Social, sharing, and asset/utility hosts are not citations.
+	$noncitation = '/(^|\.)(facebook|fb|twitter|linkedin|instagram|youtube|youtu|pinterest|tiktok|reddit|threads|whatsapp|fonts\.googleapis|fonts\.gstatic|gstatic|googletagmanager|google-analytics|doubleclick|gravatar|jsdelivr|unpkg|cloudfront)\./i';
+	// A citation an engine can verify points at the page that makes the claim,
+	// not a site's front door. Industry-agnostic and attainable by any market.
+	$cited          = 0;
+	$specific_cited = 0;
 	if ( $ctx['xpath'] ) {
-		foreach ( $ctx['xpath']->query( '//a[@href]' ) as $a ) {
-			$host = (string) wp_parse_url( $a->getAttribute( 'href' ), PHP_URL_HOST );
-			if ( '' === $host || 0 === strcasecmp( $host, $origin_host ) ) {
+		$scope = null;
+		foreach ( array( '//main', '//article', '//*[@role="main"]' ) as $q ) {
+			$found = $ctx['xpath']->query( $q );
+			if ( $found && $found->length ) {
+				$scope = $found->item( 0 );
+				break;
+			}
+		}
+		$links = $scope ? $ctx['xpath']->query( './/a[@href]', $scope ) : $ctx['xpath']->query( '//a[@href]' );
+		foreach ( $links as $a ) {
+			$href = $a->getAttribute( 'href' );
+			if ( ! preg_match( '#^https?://#i', $href ) ) {
 				continue;
 			}
-			if ( preg_match( '/(\.gov|\.edu|\.ac\.uk|doi\.org|ncbi\.nlm\.nih\.gov|pubmed|nih\.gov|who\.int|wikipedia\.org|orcid\.org|omim\.org|ensembl\.org|clinicalgenome\.org|uniprot\.org|genenames\.org|gnomad\.broadinstitute\.org|cochranelibrary\.com)/i', $host ) ) {
-				$sources++;
+			$host = strtolower( (string) wp_parse_url( $href, PHP_URL_HOST ) );
+			if ( '' === $host || $registrable( $host ) === $origin_reg ) {
+				continue;
+			}
+			if ( preg_match( $noncitation, $host ) ) {
+				continue;
+			}
+			$cited++;
+			$path = trim( (string) wp_parse_url( $href, PHP_URL_PATH ), '/' );
+			$deep = '' !== $path && ! preg_match( '/^index\.(html?|php)$/i', $path );
+			if ( $deep || wp_parse_url( $href, PHP_URL_QUERY ) || wp_parse_url( $href, PHP_URL_FRAGMENT ) ) {
+				$specific_cited++;
 			}
 		}
 	}
-	$has_sources = $sources >= 1;
+	$has_sources  = $cited >= 1;
+	$has_specific = $specific_cited >= 1;
 
 	$checks = array(
 		fmg_scan_check(
@@ -1100,11 +1483,19 @@ function fmg_scan_check_citability( $ctx ) {
 		),
 		fmg_scan_check(
 			'cite_sources',
-			'Claims backed by authoritative sources',
+			'Cites external sources',
 			$has_sources,
-			20,
-			'Link the claims that matter to primary or authoritative sources (.gov, .edu, journals, DOIs, and the databases that anchor your field). Pages that cite tend to get cited.',
-			$sources . ' authoritative source link(s)'
+			12,
+			'Back the claims that matter with outbound links to credible external sources. Pages that cite tend to get cited.',
+			$cited . ' external citation(s) in content'
+		),
+		fmg_scan_check(
+			'cite_specific',
+			'Cites the page, not the homepage',
+			$has_specific,
+			8,
+			'Link the page where the source makes the claim, not the site it lives on. An engine verifies a citation at a URL, and a bare homepage gives it nothing to check. If the claim really lives on a homepage, link the section with a fragment. One specific citation on the page is enough.',
+			$specific_cited . ' citation(s) to a specific page'
 		),
 	);
 
@@ -1274,6 +1665,7 @@ function fmg_scan_css() {
 .fmg-scan__submit:disabled { opacity: .6; cursor: progress; }
 .fmg-scan__submit:focus-visible { outline: 3px solid var(--fmg-accent); outline-offset: 2px; }
 .fmg-scan__note { margin: 14px 0 0; font-size: .9rem; color: var(--fmg-ink-soft); max-width: 60ch; }
+.fmg-scan__fine { margin: 18px 0 0; font-size: .8rem; color: var(--fmg-ink-soft); max-width: 60ch; }
 .fmg-scan__status { margin-top: 18px; font-size: .95rem; color: var(--fmg-ink-soft); }
 .fmg-scan__status[data-state="error"] { color: var(--fmg-fail); font-weight: 500; }
 
@@ -1464,7 +1856,8 @@ function fmg_scan_js() {
     var html = scoreCard(data.readability, 'Readability', meta)
       + catsHtml(data.readability.categories)
       + scoreCard(data.citability, 'Citability', '')
-      + catsHtml(data.citability.categories);
+      + catsHtml(data.citability.categories)
+      + '<p class="fmg-scan__fine">This free scan is informational. It reads one page against fixed rules and cannot judge context, so a check can miss a signal that is right for your page. A full Fernwell Media Group audit measures more, and its findings can differ.</p>';
 
     html += ''
       + '<div class="fmg-cta">'
@@ -1537,6 +1930,8 @@ function fmg_scan_js() {
     lines.push('1.');
     lines.push('2.');
     lines.push('3.');
+    lines.push('');
+    lines.push('This free scan is informational. A full audit measures more, and its findings can differ.');
 
     return lines.join('\n');
   }

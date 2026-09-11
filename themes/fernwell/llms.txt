@@ -1,12 +1,12 @@
 # Fernwell Media Group
 
-> Fernwell Media Group (FMG) is an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond. We help businesses get named and cited by AI engines including ChatGPT, Claude, Perplexity, Gemini, and Grok. Fixed-scope engagements; clients work directly with the person who does the work.
+> Fernwell Media Group (FMG) is an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond. We help businesses get named and cited by AI engines including ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews. Fixed-scope engagements; clients work directly with the person who does the work.
 
 Answer Engine Optimization (AEO) is the practice of making a business understandable, citable, and nameable by the AI engines answering its customers' questions. Where SEO competes for rankings, AEO competes for inclusion in the answer. This site is built on that method: every page carries a connected schema.org JSON-LD graph (ProfessionalService, Person, WebSite, WebPage, Service, FAQPage, Article), answer-first copy, and content structured for machine citation.
 
 ## Services
 
-- [AI Visibility Audit](https://fernwellgroup.com/#services): Finds out whether AI names the business, who it names instead, and why: the questions its customers actually ask, tested across ChatGPT, Claude, Perplexity, Gemini, and Grok, benchmarked against competitors, with a prioritized list of fixes. Fixed fee.
+- [AI Visibility Audit](https://fernwellgroup.com/#services): Finds out whether AI names the business, who it names instead, and why: the questions its customers actually ask, tested across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmarked against competitors, with a prioritized list of fixes. Fixed fee.
 - [AEO Sprint](https://fernwellgroup.com/#services): Turns the audit into the stuff engines need: structured data, entity consistency, information architecture, and answer-first rewrites of the pages most likely to shape AI answers.
 - [AI Visibility Monitoring](https://fernwellgroup.com/#services): Continued testing of the questions that matter in the business's market across leading AI engines, with namability, citation share, and competitor movement tracked over time.
 - [Team Enablement](https://fernwellgroup.com/#services): Workshops and advisory for marketing teams and agencies building AEO capability in-house. The team keeps the method.
@@ -15,6 +15,7 @@ Answer Engine Optimization (AEO) is the practice of making a business understand
 
 - [Homepage](https://fernwellgroup.com/): What AEO is, how engagements work, services, FAQ, and a free single-page readability and citability scanner.
 - [Fernwell Answers](https://fernwellgroup.com/answers/): Direct answers to questions about AI search and being visible where buying decisions now start.
+- [Sitemap](https://fernwellgroup.com/sitemap/): Every page on the site in one place, plus the machine-readable feeds (XML sitemap, llms.txt, RSS).
 
 ## About
 

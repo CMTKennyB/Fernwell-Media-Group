@@ -25,6 +25,7 @@
       <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>">Privacy</a> &middot;
       <a href="<?php echo esc_url( home_url( '/terms-of-service/' ) ); ?>">Terms</a> &middot;
       <a href="<?php echo esc_url( home_url( '/cookie-policy/' ) ); ?>">Cookies</a> &middot;
+      <a href="<?php echo esc_url( home_url( '/sitemap/' ) ); ?>">Sitemap</a> &middot;
       <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a>
     </div>
   </div>
