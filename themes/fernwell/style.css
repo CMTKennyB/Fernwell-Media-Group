@@ -4,7 +4,7 @@ Theme URI: https://fernwellgroup.com/
 Author: Fernwell Media Group
 Author URI: https://fernwellgroup.com/
 Description: Custom theme for Fernwell Media Group, an independent Answer Engine Optimization consultancy. Grove palette: stone paper, deep green, apricot accents. Built AEO-first with structured data and answer-first layout.
-Version: 2.0.0
+Version: 2.1.0
 Requires at least: 6.0
 Requires PHP: 7.4
 License: GNU General Public License v2 or later
@@ -139,8 +139,16 @@ section.block.alt { background: var(--paper-alt); }
 .block h2 { font-size: clamp(1.6rem, 3.2vw, 2.25rem); letter-spacing: -0.01em; font-weight: 700; max-width: 720px; }
 .block .sub { color: var(--ink-soft); margin-top: 16px; max-width: 680px; font-size: 1.06rem; }
 .answer-first {
-  margin-top: 20px; padding: 22px 26px; border-left: 4px solid var(--accent);
-  background: var(--paper-alt); border-radius: 0 10px 10px 0; max-width: 720px; font-size: 1.06rem;
+  margin-top: 20px; padding: 22px 26px;
+  background: var(--paper-alt); border-radius: 10px; max-width: 720px; font-size: 1.06rem;
+}
+
+/* Inset pipe (house style): a thin, soft accent bar inside a panel's padding,
+   never a border on its edge. Add the class to any padded, rounded panel. */
+.inset-pipe { position: relative; padding-left: 38px; }
+.inset-pipe::before {
+  content: ""; position: absolute; left: 18px; top: 24px; bottom: 24px; width: 2px;
+  background: var(--accent); opacity: .4; border-radius: 1px;
 }
 section.block.alt .answer-first { background: var(--paper); }
 
@@ -299,6 +307,9 @@ footer.site a { color: var(--ink-soft); }
   .stats { padding: 40px 0; }
   .stats .grid { gap: 24px; }
   .contact-box { padding: 38px 24px; }
+  .answer-first { padding: 18px; font-size: 1rem; }
+  .inset-pipe { padding-left: 30px; }
+  .inset-pipe::before { left: 13px; top: 20px; bottom: 20px; }
   .answers-head, .entry { padding-top: 60px; }
   .post-cta { padding: 26px 22px; }
   .post-nav { margin-top: 56px; }

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FERNWELL_VERSION', '2.0.0' );
+define( 'FERNWELL_VERSION', '2.1.0' );
 
 require get_theme_file_path( 'inc/post-meta.php' );
 
@@ -97,6 +97,36 @@ function fernwell_reading_time( $post = null ) {
 }
 
 /**
+ * A post's real "last changed" moment, as a Unix timestamp. Scheduled
+ * posts carry a modified stamp from before they were published, so the
+ * later of the two dates is the honest answer for schema and the sitemap.
+ * The visible "Updated" line keeps its own stricter rule.
+ */
+function fernwell_post_modified_gmt( $post ) {
+	$post = get_post( $post );
+	return max( (int) get_post_modified_time( 'U', true, $post ), (int) get_post_time( 'U', true, $post ) );
+}
+
+/**
+ * The post's picture for schema: the metabox social image if set, else the
+ * Fernwell Answers card, else the FMG card. Same order og:image uses, so
+ * every surface shows the same picture. Cards are 1200x630.
+ */
+function fernwell_post_schema_image( $post_id ) {
+	$custom = fernwell_post_social_image( $post_id );
+	if ( $custom ) {
+		return array( '@type' => 'ImageObject', 'url' => $custom[0], 'width' => $custom[1], 'height' => $custom[2] );
+	}
+	$card = fernwell_answers_card();
+	return array(
+		'@type'  => 'ImageObject',
+		'url'    => $card ? $card : get_theme_file_uri( 'assets/og-card.png' ),
+		'width'  => 1200,
+		'height' => 630,
+	);
+}
+
+/**
  * The Fernwell Answers share card, if the theme ships one; null falls back
  * to the default FMG card. 1200x630.
  */
@@ -126,6 +156,48 @@ function fernwell_document_title_parts( $parts ) {
 	return $parts;
 }
 add_filter( 'document_title_parts', 'fernwell_document_title_parts' );
+
+/**
+ * No emoji plumbing. The site uses none, so the detection module, its JSON
+ * settings block, the inline CSS, and the s.w.org prefetch are dropped from
+ * every page, front and admin.
+ */
+function fernwell_disable_emoji() {
+	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+	remove_action( 'wp_print_styles', 'print_emoji_styles' );
+	remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+	remove_action( 'admin_print_styles', 'print_emoji_styles' );
+	remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
+	remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
+	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
+	add_filter( 'emoji_svg_url', '__return_false' );
+}
+add_action( 'init', 'fernwell_disable_emoji' );
+
+/**
+ * Third-party front-end assets the site does not use. The WordPress AI
+ * plugin (bundled by the host) enqueues its summarization block styles on
+ * every public page through enqueue_block_assets; the plugin stays active
+ * for the editor, the public pages stop carrying its CSS.
+ */
+function fernwell_trim_third_party_assets() {
+	if ( is_admin() ) {
+		return;
+	}
+	wp_dequeue_style( 'ai_summarization' );
+	wp_deregister_style( 'ai_summarization' );
+}
+add_action( 'enqueue_block_assets', 'fernwell_trim_third_party_assets', 20 );
+
+/**
+ * Head links that do not earn their place: the comments feed (comments are
+ * hard-off) and the shortlink (permalinks are already short). The Link
+ * response header for the shortlink goes with it. The posts feed stays.
+ */
+add_filter( 'feed_links_show_comments_feed', '__return_false' );
+remove_action( 'wp_head', 'feed_links_extra', 3 );
+remove_action( 'wp_head', 'wp_shortlink_wp_head', 10 );
+remove_action( 'template_redirect', 'wp_shortlink_header', 11 );
 
 /**
  * Meta description, Open Graph, and Twitter Card tags.
@@ -199,13 +271,34 @@ function fernwell_social_meta() {
 add_action( 'wp_head', 'fernwell_social_meta', 4 );
 
 /**
+ * rel=canonical for the Answers listing. Core emits one only on singular
+ * pages, so the listing had none even though its og:url and schema already
+ * used fernwell_answers_url(). Paginated pages point at themselves.
+ */
+function fernwell_answers_canonical() {
+	if ( ! is_home() || is_front_page() ) {
+		return;
+	}
+	$url = is_paged() ? get_pagenum_link( (int) get_query_var( 'paged' ) ) : fernwell_answers_url();
+	echo '<link rel="canonical" href="' . esc_url( $url ) . '" />' . "\n";
+}
+add_action( 'wp_head', 'fernwell_answers_canonical', 4 );
+
+/**
  * Front-page freshness: the homepage has no post of its own, so anchor its
  * dates to real site-content activity. Both are filterable.
  */
 function fernwell_home_dates() {
 	$newest = get_posts( array( 'numberposts' => 1, 'post_status' => 'publish', 'orderby' => 'modified', 'order' => 'DESC', 'fields' => 'ids' ) );
+	$latest = get_posts( array( 'numberposts' => 1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'DESC', 'fields' => 'ids' ) );
 	$oldest = get_posts( array( 'numberposts' => 1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC', 'fields' => 'ids' ) );
-	$modified  = $newest ? get_post_modified_time( 'c', false, $newest[0] ) : current_time( 'c' );
+	// Newest activity is the later of "most recently modified" and "most
+	// recently published", so a scheduled post counts from its publish day.
+	$activity  = max(
+		$newest ? (int) get_post_modified_time( 'U', true, $newest[0] ) : 0,
+		$latest ? (int) get_post_time( 'U', true, $latest[0] ) : 0
+	);
+	$modified  = $activity ? wp_date( 'c', $activity ) : current_time( 'c' );
 	$published = $oldest ? get_post_time( 'c', false, $oldest[0] ) : $modified;
 	return array(
 		'published' => apply_filters( 'fernwell_home_published', $published ),
@@ -242,6 +335,12 @@ add_filter( 'query_vars', 'fernwell_llms_query_var' );
 
 function fernwell_llms_serve() {
 	if ( get_query_var( 'fernwell_llms' ) ) {
+		// One canonical URL: the slashed form goes back to the bare file path.
+		$path = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
+		if ( is_string( $path ) && '/' === substr( $path, -1 ) ) {
+			wp_safe_redirect( home_url( '/llms.txt' ), 301 );
+			exit;
+		}
 		$file = get_theme_file_path( 'llms.txt' );
 		if ( file_exists( $file ) ) {
 			header( 'Content-Type: text/plain; charset=utf-8' );
@@ -261,6 +360,18 @@ function fernwell_llms_serve() {
 	}
 }
 add_action( 'template_redirect', 'fernwell_llms_serve' );
+
+/**
+ * Keep the canonical redirect off /llms.txt. With only the theme's query
+ * var set, WordPress treats the request as the front page and 301s it to
+ * /llms.txt/, so a crawler asking for the file got a redirect before the
+ * handler above ever ran. The handler owns the URL now: the bare path
+ * serves directly and the slashed form 301s back to it, like robots.txt.
+ */
+function fernwell_llms_canonical( $redirect_url ) {
+	return get_query_var( 'fernwell_llms' ) ? false : $redirect_url;
+}
+add_filter( 'redirect_canonical', 'fernwell_llms_canonical' );
 
 /**
  * Dynamic llms.txt section listing every published answer, so the file AI
@@ -378,13 +489,68 @@ function fernwell_disable_archives() {
 add_action( 'template_redirect', 'fernwell_disable_archives' );
 
 /**
- * Keep archive URLs out of the core sitemap too, so engines are never
- * invited to pages that only redirect.
+ * XML sitemap. The FMG AEO mu-plugin serves it at /sitemap.xml and retires
+ * core's wp-sitemap.xml; the theme supplies the site-specific rules below
+ * through the plugin's filters. The HTML counterpart for people is
+ * /sitemap/ (page-sitemap.php).
+ *
+ * Belt and braces: should core sitemaps ever come back, keep archive URLs
+ * out, so engines are never invited to pages that only redirect.
  */
 function fernwell_sitemap_providers( $provider, $name ) {
 	return 'taxonomies' === $name ? false : $provider;
 }
 add_filter( 'wp_sitemaps_add_provider', 'fernwell_sitemap_providers', 10, 2 );
+
+/**
+ * Meta query that keeps posts opted out of indexing in the Search & Social
+ * metabox (noindex, or a canonical pointing elsewhere) out of any listing
+ * meant for engines. The metabox deletes empty keys, so NOT EXISTS is the
+ * whole test. Shared by the XML sitemap and the HTML sitemap page.
+ */
+function fernwell_indexable_meta_query() {
+	return array(
+		array( 'key' => '_fernwell_noindex', 'compare' => 'NOT EXISTS' ),
+		array( 'key' => '_fernwell_canonical', 'compare' => 'NOT EXISTS' ),
+	);
+}
+
+function fernwell_sitemap_query_args( $args, $post_type ) {
+	if ( 'post' === $post_type ) {
+		$args['meta_query'] = fernwell_indexable_meta_query();
+	}
+	return $args;
+}
+add_filter( 'fmg_aeo_sitemap_query_args', 'fernwell_sitemap_query_args', 10, 2 );
+
+/**
+ * lastmod for pages whose content is really the posts: the homepage reports
+ * the same dateModified its schema does (fernwell_home_dates), and the
+ * Answers listing and the sitemap page report whichever is newer, the page
+ * itself or the most recently modified answer.
+ */
+function fernwell_sitemap_entry( $entry, $post ) {
+	if ( 'post' === $post->post_type ) {
+		$entry['lastmod'] = wp_date( DATE_W3C, fernwell_post_modified_gmt( $post ) );
+		return $entry;
+	}
+	if ( 'page' !== $post->post_type ) {
+		return $entry;
+	}
+	$home = fernwell_home_dates();
+	if ( (int) get_option( 'page_on_front' ) === $post->ID ) {
+		$entry['lastmod'] = $home['modified'];
+		return $entry;
+	}
+	if ( (int) get_option( 'page_for_posts' ) === $post->ID || 'sitemap' === $post->post_name ) {
+		$activity = strtotime( $home['modified'] );
+		if ( $activity > (int) get_post_modified_time( 'U', true, $post ) ) {
+			$entry['lastmod'] = wp_date( DATE_W3C, $activity );
+		}
+	}
+	return $entry;
+}
+add_filter( 'fmg_aeo_sitemap_entry', 'fernwell_sitemap_entry', 10, 2 );
 
 /**
  * Structured data: one connected graph, every node cross-referenced by @id.
@@ -435,6 +601,12 @@ function fernwell_schema() {
 			'alternateName' => 'FMG',
 			'description'   => 'Independent Answer Engine Optimization (AEO) consultancy: AI visibility audits, schema and entity implementation, and AI visibility monitoring across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews.',
 			'url'           => $base,
+			'image'         => array(
+				'@type'  => 'ImageObject',
+				'url'    => get_theme_file_uri( 'assets/og-card.png' ),
+				'width'  => 1200,
+				'height' => 630,
+			),
 			'founder'       => array( '@id' => $base . '#kenneth' ),
 			'areaServed'    => 'United States',
 			'email'         => 'mailto:hello@fernwellgroup.com',
@@ -508,11 +680,7 @@ function fernwell_schema() {
 	$answers_url = fernwell_answers_url();
 
 	if ( is_home() || is_singular( 'post' ) ) {
-		$blog_posts = array();
-		foreach ( get_posts( array( 'numberposts' => -1, 'post_status' => 'publish', 'fields' => 'ids' ) ) as $answer_id ) {
-			$blog_posts[] = array( '@id' => get_permalink( $answer_id ) . '#article' );
-		}
-		$graph[] = array(
+		$blog = array(
 			'@type'       => 'Blog',
 			'@id'         => $answers_url . '#blog',
 			'name'        => 'Fernwell Answers',
@@ -520,9 +688,18 @@ function fernwell_schema() {
 			'url'         => $answers_url,
 			'publisher'   => array( '@id' => $base . '#org' ),
 			'isPartOf'    => array( '@id' => $base . '#website' ),
-			'blogPost'    => $blog_posts,
 			'inLanguage'  => 'en-US',
 		);
+		// The listing enumerates the series. Single posts point up through
+		// isPartOf instead: on a post page the other posts would be bare @id
+		// references that validators flag, and the list grows with every post.
+		if ( is_home() ) {
+			$blog['blogPost'] = array();
+			foreach ( get_posts( array( 'numberposts' => -1, 'post_status' => 'publish', 'fields' => 'ids' ) ) as $answer_id ) {
+				$blog['blogPost'][] = array( '@id' => get_permalink( $answer_id ) . '#article' );
+			}
+		}
+		$graph[] = $blog;
 	}
 
 	if ( is_front_page() ) {
@@ -616,8 +793,9 @@ function fernwell_schema() {
 			'@type'            => 'BlogPosting',
 			'@id'              => $current_url . '#article',
 			'headline'         => get_the_title( $post ),
+			'image'            => fernwell_post_schema_image( $post->ID ),
 			'datePublished'    => get_the_date( 'c', $post ),
-			'dateModified'     => get_the_modified_date( 'c', $post ),
+			'dateModified'     => wp_date( 'c', fernwell_post_modified_gmt( $post ) ),
 			'author'           => array( '@id' => $base . '#kenneth' ),
 			'publisher'        => array( '@id' => $base . '#org' ),
 			'isPartOf'         => array( '@id' => $answers_url . '#blog' ),

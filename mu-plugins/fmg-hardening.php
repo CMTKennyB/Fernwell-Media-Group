@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: FMG Security Hardening
- * Description: Baseline hardening for the Fernwell site: security headers, XML-RPC off, username enumeration closed, version fingerprint removed.
- * Version:     1.0.0
+ * Description: Baseline hardening for the Fernwell site: security headers, XML-RPC dead (403), username enumeration closed, version fingerprint removed.
+ * Version:     1.1.0
  * Author:      Fernwell Media Group
  *
  * Drop this file directly into wp-content/mu-plugins/ (no subfolder: mu-plugins
@@ -38,8 +38,23 @@ add_action(
  */
 add_filter( 'xmlrpc_enabled', '__return_false' );
 // xmlrpc_enabled only gates the authenticated methods; emptying the method
-// table also kills the unauthenticated ones (pingback.ping, demo.*, system.*).
+// table also kills the unauthenticated ones (pingback.ping, demo.*). The
+// three system.* introspection methods are re-added by the server after
+// this filter, so the endpoint would still answer probes with a method list.
 add_filter( 'xmlrpc_methods', '__return_empty_array' );
+// Go silent as well: any XML-RPC request gets a bare 403 at init, before
+// the server class is even loaded, so the endpoint reveals nothing at all.
+add_action(
+	'init',
+	function () {
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+			status_header( 403 );
+			nocache_headers();
+			exit;
+		}
+	},
+	0
+);
 add_filter(
 	'wp_headers',
 	function ( $headers ) {
@@ -47,6 +62,9 @@ add_filter(
 		return $headers;
 	}
 );
+// And stop advertising the dead endpoint: the EditURI/RSD link in the head
+// exists only to tell remote publishing clients where XML-RPC lives.
+remove_action( 'wp_head', 'rsd_link' );
 
 /*
  * Username enumeration. The REST users endpoint and author archives both leak

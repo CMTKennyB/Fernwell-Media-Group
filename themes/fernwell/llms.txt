@@ -15,6 +15,7 @@ Answer Engine Optimization (AEO) is the practice of making a business understand
 
 - [Homepage](https://fernwellgroup.com/): What AEO is, how engagements work, services, FAQ, and a free single-page readability and citability scanner.
 - [Fernwell Answers](https://fernwellgroup.com/answers/): Direct answers to questions about AI search and being visible where buying decisions now start.
+- [Sitemap](https://fernwellgroup.com/sitemap/): Every page on the site in one place, plus the machine-readable feeds (XML sitemap, llms.txt, RSS).
 
 ## About
 

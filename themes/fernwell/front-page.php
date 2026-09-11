@@ -63,7 +63,7 @@ get_header();
 <section class="block" id="what">
   <div class="wrap">
     <h2>What is Answer Engine Optimization?</h2>
-    <div class="answer-first">
+    <div class="answer-first inset-pipe">
       <strong>Answer Engine Optimization (AEO)</strong> is the practice of making you understandable, citable, and nameable by the AI engines answering your customers’ questions. Where SEO competes for rankings, AEO competes for inclusion in the answer.
     </div>
     <p class="sub">AI engines need to understand who you are before they can cite you. A readable website alone doesn’t put you in the answer. AEO connects the pieces through information architecture: clear entity information, structured data that machines can parse, and content built around real questions. This site puts those principles into practice, from the information you see to the markup underneath it. View the source code, and you'll see the method for sale.</p>

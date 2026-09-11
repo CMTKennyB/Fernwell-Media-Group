@@ -63,7 +63,7 @@ get_header();
 <section class="block" id="what">
   <div class="wrap">
     <h2>What is Answer Engine Optimization?</h2>
-    <div class="answer-first">
+    <div class="answer-first inset-pipe">
       <strong>Answer Engine Optimization (AEO)</strong> is the practice of making you understandable, citable, and nameable by the AI engines answering your customers’ questions. Where SEO competes for rankings, AEO competes for inclusion in the answer.
     </div>
     <p class="sub">AI engines need to understand who you are before they can cite you. A readable website alone doesn’t put you in the answer. AEO connects the pieces through information architecture: clear entity information, structured data that machines can parse, and content built around real questions. This site puts those principles into practice, from the information you see to the markup underneath it. View the source code, and you'll see the method for sale.</p>
@@ -102,7 +102,7 @@ get_header();
       <div class="card">
         <div class="tag">Measure</div>
         <h3>AI Visibility Audit</h3>
-        <p>Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Grok, benchmark your namability against competitors, and deliver a prioritized list of fixes.</p>
+        <p>Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmark your namability against competitors, and deliver a prioritized list of fixes.</p>
         <a href="mailto:hello@fernwellgroup.com?subject=Request%20an%20audit">Request an audit &rarr;</a>
       </div>
       <div class="card">

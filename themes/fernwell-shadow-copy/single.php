@@ -21,11 +21,19 @@ get_header();
       <header class="entry-header">
         <a class="kicker" href="<?php echo esc_url( fernwell_answers_url() ); ?>">Fernwell Answers:</a>
         <h1><?php the_title(); ?></h1>
-        <div class="meta">By Kenneth Raymond <span aria-hidden="true">&middot;</span> <time datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>"><?php echo esc_html( get_the_date() ); ?></time><?php if ( get_the_modified_date() !== get_the_date() ) : ?> <span aria-hidden="true">&middot;</span> Updated <time datetime="<?php echo esc_attr( get_the_modified_date( 'c' ) ); ?>"><?php echo esc_html( get_the_modified_date() ); ?></time><?php endif; ?> <span aria-hidden="true">&middot;</span> <?php echo esc_html( fernwell_reading_time() ); ?> min read</div>
+        <div class="meta">By Kenneth Raymond <span aria-hidden="true">&middot;</span> <time datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>"><?php echo esc_html( get_the_date() ); ?></time> <span aria-hidden="true">&middot;</span> <?php echo esc_html( fernwell_reading_time() ); ?> min read</div>
       </header>
       <div class="entry-content">
         <?php the_content(); ?>
       </div>
+      <?php
+      // Show only for revisions made on a later day than publication: same-day
+      // touches don't count, and scheduled posts carry a pre-publication
+      // modified stamp that must never render as an update.
+      if ( get_post_modified_time( 'U', true ) > get_post_time( 'U', true ) && get_the_modified_date() !== get_the_date() ) :
+      ?>
+      <div class="entry-updated">Updated <time datetime="<?php echo esc_attr( get_the_modified_date( 'c' ) ); ?>"><?php echo esc_html( get_the_modified_date() ); ?></time></div>
+      <?php endif; ?>
       <aside class="post-cta">
         <h2>Does AI name you?</h2>
         <p>Start where every AI visibility strategy starts: can an engine actually read you? Run a free, single-page scan for readability and citability. No account. No email.</p>
