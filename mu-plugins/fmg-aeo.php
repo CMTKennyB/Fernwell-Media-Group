@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: FMG AEO
- * Description: The seed of the Fernwell AEO plugin. Today it owns the XML sitemap: serves /sitemap.xml with an FMG-branded stylesheet, declares it in robots.txt, and retires core's wp-sitemap.xml.
+ * Description: Serves /sitemap.xml with an FMG-branded stylesheet, declares it in robots.txt, and retires core's wp-sitemap.xml.
  * Version:     0.1.0
  * Author:      Fernwell Media Group
  *
@@ -100,7 +100,7 @@ add_action( 'template_redirect', 'fmg_aeo_retire_core_sitemap', 0 );
  * robots.txt: a curated, version-controlled crawler policy served through
  * the core filter (no physical file in the web root, which would override
  * this). Search, AI, answer-engine, and training crawlers are welcomed by
- * name; Fernwell wants to be found, cited, and named. Admin and internal
+ * name so the site can be found and cited. Admin and internal
  * search stay out of the crawl, and parasitic SEO scrapers are turned
  * away. Runs last (PHP_INT_MAX) and returns the whole document. Honors
  * "Discourage search engines": when the site is private, core's default
@@ -158,7 +158,7 @@ User-agent: xAI-Grok
 User-agent: GrokBot
 Allow: /
 
-# Explicitly disallowed: parasitic SEO / scraper crawlers (no benefit to us)
+# Explicitly disallowed: parasitic SEO/scraper crawlers (no benefit to us)
 User-agent: AhrefsBot
 User-agent: SemrushBot
 User-agent: MJ12bot

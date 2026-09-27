@@ -1,6 +1,6 @@
 <?php
 /**
- * © 2026 Kenneth Raymond — All rights reserved.
+ * © 2026 Kenneth Raymond. All rights reserved.
  * Part of the Fernwell WordPress theme.
  * Do not copy, modify, or redistribute without permission.
  *
@@ -37,7 +37,7 @@ get_header();
     <div class="stat">
       <div class="num">68%</div>
       <div class="label">of US Google searches now end without a click</div>
-      <div class="src">SparkToro / Similarweb, 2026</div>
+      <div class="src">SparkToro/Similarweb, 2026</div>
     </div>
     <div class="stat">
       <div class="num">8%</div>
@@ -55,7 +55,7 @@ get_header();
 <section class="block alt" id="scan">
   <div class="wrap">
     <h2>See how an AI engine sees you</h2>
-    <p class="sub">Start with the first question every AI visibility strategy has to answer: can an engine actually read you? Run a free, single-page scan for readability and citability. No account. No email.</p>
+    <p class="sub">Start with the first question every AI visibility strategy has to answer: can an engine actually read you? Run a free, single-page scan for legibility and citability. No account. No email.</p>
     <?php echo do_shortcode( '[fmg_readability_scan]' ); ?>
   </div>
 </section>

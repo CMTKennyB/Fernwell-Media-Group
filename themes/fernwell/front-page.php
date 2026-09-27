@@ -1,6 +1,6 @@
 <?php
 /**
- * © 2026 Kenneth Raymond — All rights reserved.
+ * © 2026 Kenneth Raymond. All rights reserved.
  * Part of the Fernwell WordPress theme.
  * Do not copy, modify, or redistribute without permission.
  *
@@ -37,7 +37,7 @@ get_header();
     <div class="stat">
       <div class="num">68%</div>
       <div class="label">of US Google searches now end without a click</div>
-      <div class="src">SparkToro / Similarweb, 2026</div>
+      <div class="src">SparkToro/Similarweb, 2026</div>
     </div>
     <div class="stat">
       <div class="num">8%</div>

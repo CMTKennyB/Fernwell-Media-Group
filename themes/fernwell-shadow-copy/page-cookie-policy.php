@@ -1,6 +1,6 @@
 <?php
 /**
- * © 2026 Kenneth Raymond — All rights reserved.
+ * © 2026 Kenneth Raymond. All rights reserved.
  * Part of the Fernwell WordPress theme.
  * Do not copy, modify, or redistribute without permission.
  *
@@ -19,7 +19,7 @@ get_header();
   <div class="wrap">
     <header class="entry-header">
       <h1>Cookie Policy</h1>
-      <div class="meta">Effective July 21, 2026</div>
+      <div class="meta">Effective September 26, 2026</div>
     </header>
     <div class="entry-content">
 
@@ -29,16 +29,16 @@ get_header();
       <p>Cookies are small text files placed on your device by a website. They allow a site to recognize your device and remember information about your visit. Cookies do not run programs or deliver viruses; they are passive data files. Cookies are commonly grouped into categories: Essential cookies required for a site to operate, Functional cookies that enable enhanced features, Analytics cookies that provide usage insights, and Third-Party cookies set by external services.</p>
 
       <h2>How We Use Cookies</h2>
-      <p>This site currently uses cookies sparingly. Essential cookies may be set by WordPress for strictly functional purposes, primarily for logged-in site administrators; ordinary visitors browsing the site are not tracked. We do not currently use analytics cookies, advertising cookies, or social media tracking cookies, and we do not build profiles of visitors.</p>
+      <p>This site uses two kinds of cookies. Essential cookies keep the site working: WordPress sets them for logged-in administrators, and our consent tool sets one to remember your cookie choice. Analytics cookies come from Google Analytics 4 and show us how visitors use the site, such as which pages they read. Google Analytics runs only after you allow statistics cookies, never runs for site administrators, and has IP anonymization on. We do not use advertising or social media tracking cookies, and we do not build profiles of visitors.</p>
 
       <h2>Cookie Consent and Preferences</h2>
-      <p>Because the site sets no non-essential cookies today, no consent banner is currently required or displayed. If we introduce analytics or other non-essential cookies in the future, a consent mechanism will be added first, allowing you to accept all cookies, reject non-essential cookies, or customize your preferences, and this policy will be updated to describe the change.</p>
+      <p>On your first visit, a banner asks for your choice. Nothing optional runs until you choose: accept all cookies, reject non-essential cookies, or pick which categories to allow. If you reject statistics cookies, Google Analytics never loads.</p>
 
       <h2>Managing Cookies Through Your Browser</h2>
       <p>Every major browser lets you view, block, and delete cookies through its settings, either for all sites or for specific ones. You can also set your browser to notify you before a cookie is placed. Instructions are available in the help documentation for Chrome, Firefox, Safari, and Edge. Blocking essential cookies may affect site functionality for logged-in users, though ordinary visitors should notice no difference on this site.</p>
 
       <h2>Legal Bases for Processing</h2>
-      <p>Where required by applicable law, the legal basis for any essential cookies is our legitimate interest in operating a functioning, secure website. Any future non-essential cookies would be used only on the basis of your consent, collected through the mechanism described above.</p>
+      <p>Where required by applicable law, the legal basis for any essential cookies is our legitimate interest in operating a functioning, secure website. Analytics cookies rest on your consent, collected through the cookie banner.</p>
 
       <h2>Updates to This Cookies Policy</h2>
       <p>We may update this policy from time to time. The current version will always be posted at this page with its effective date, and material changes, such as the introduction of any new cookie category, will be noted plainly.</p>

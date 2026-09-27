@@ -7,13 +7,12 @@ Description: Custom theme for Fernwell Media Group, an independent Answer Engine
 Version: 3.0.0
 Requires at least: 6.0
 Requires PHP: 7.4
-License: GNU General Public License v2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+License: Proprietary. All rights reserved.
 Text Domain: fernwell
 */
 
 /**
- * © 2026 Kenneth Raymond — All rights reserved.
+ * © 2026 Kenneth Raymond. All rights reserved.
  * Part of the Fernwell WordPress theme.
  * Do not copy, modify, or redistribute without permission.
  *
@@ -143,7 +142,7 @@ section.block.alt { background: var(--paper-alt); }
   background: var(--paper-alt); border-radius: 10px; max-width: 720px; font-size: 1.06rem;
 }
 
-/* Inset pipe (house style): a thin, soft accent bar inside a panel's padding,
+/* Inset pipe: a thin, soft accent bar inside a panel's padding,
    never a border on its edge. Add the class to any padded, rounded panel. */
 .inset-pipe { position: relative; padding-left: 38px; }
 .inset-pipe::before {
@@ -240,7 +239,7 @@ footer.site a { color: var(--ink-soft); }
 .reentry-answers { margin-top: 64px; max-width: 960px; }
 .reentry-answers h2 { font-size: 1.4rem; letter-spacing: -0.01em; }
 
-/* Single post / page */
+/* Single post/page */
 .entry { padding: 84px 0 90px; }
 .entry-header h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); letter-spacing: -0.02em; max-width: 800px; }
 .entry-header .meta { font-size: .85rem; color: var(--ink-soft); margin-top: 12px; }

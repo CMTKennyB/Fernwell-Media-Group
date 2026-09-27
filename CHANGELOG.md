@@ -51,17 +51,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Readability renamed Legibility** across the scanner: dial label, bands,
   copy, summary and mailto subject. The shortcode name, file name and the
   `readability` log column are unchanged.
-- **Scanner scoring model** rebuilt to Scanner Scoring Specification v3:
-  Legibility = Text 40, Extraction 25, Structure 15, Dating 20; Citability
-  = Provenance 50, Verifiability 25, Answer Shape 25; 18 scored checks,
-  integer weights, cluster-weighted aggregation. Check ids are L1 to L4,
-  C1 to C3 and N_ notes.
+- **Scanner scoring model** rebuilt: Legibility = Text 40, Extraction 25,
+  Structure 15, Dating 20; Citability = Provenance 50, Verifiability 25,
+  Answer Shape 25; 18 scored checks, integer weights, cluster-weighted
+  aggregation. Check ids are L1 to L4, C1 to C3 and N_ notes.
 - **Scanner copy**: Anthropic blocks read "may reduce"; Perplexity, Meta
   and Amazon blocks read "not documented"; 4xx errors read "two automated
   readers from our host".
 - **Scanner cache** keyed on the query string and spec version; indeterminate
   results cached for 2 minutes; cache consulted before the rate limit.
-- Plugin version 3.0.0.
+- **Cookie and Privacy Policies match the site**: both pages now state that
+  Google Analytics 4 runs only after a visitor allows statistics cookies in
+  the consent banner, and the Privacy Policy names it among the service
+  providers. Both take effect September 26, 2026.
+- **License**: the theme header now reads Proprietary, all rights reserved,
+  matching the README; the GPL notice is gone.
+- **README** rewritten for outside readers.
+- Scanner plugin version 3.0.0. Theme version 3.0.0 (`style.css` header and
+  `FERNWELL_VERSION`); the fallback theme matches it.
 
 ### Removed
 
@@ -113,23 +120,21 @@ Scanner 1.2.0, Hardening 1.1.0.
   from the site at request time, so new answers appear without upkeep, and
   it is linked from the footer and llms.txt. Slug-matched template, same
   convention as the legal pages.
-- **FMG AEO mu-plugin (0.1.0)**: the seed of the Fernwell AEO plugin. Today
-  it owns the XML sitemap: core's `wp-sitemap.xml` is retired (its URLs 301
-  to the new one), `/sitemap.xml` is served by the plugin with an
-  FMG-branded stylesheet at `/sitemap.xsl` so it reads cleanly in a
-  browser, and robots.txt declares it. Rewrite rules flush themselves once
-  per plugin version, so deploys need no permalink save. It also serves a
-  curated robots.txt through the core filter:
-  search, AI, answer-engine, and training crawlers welcomed by
-  name, admin and internal search kept out of the crawl, parasitic SEO
-  scrapers and the ads crawler turned away, llms.txt pointed to in the
-  header. The "Discourage search engines" setting is honored. The plugin is
-  generic and exposes filters; the theme hooks in the site-specific rules:
-  posts opted out of indexing in the Search & Social metabox (noindex, or
-  a canonical pointing elsewhere) are left out, the homepage reports the
-  same dateModified its schema does, and the Answers listing and sitemap
-  page report the newer of the page itself or the most recently modified
-  answer.
+- **FMG AEO mu-plugin (0.1.0)**: owns the XML sitemap: core's `wp-sitemap.xml`
+  is retired (its URLs 301 to the new one), `/sitemap.xml` is served by the
+  plugin with an FMG-branded stylesheet at `/sitemap.xsl` so it reads cleanly
+  in a browser, and robots.txt declares it. Rewrite rules flush themselves
+  once per plugin version, so deploys need no permalink save. It also serves a
+  curated robots.txt through the core filter: search, AI, answer-engine, and
+  training crawlers welcomed by name, admin and internal search kept out of
+  the crawl, parasitic SEO scrapers and the ads crawler turned away, llms.txt
+  pointed to in the header. The "Discourage search engines" setting is
+  honored. The plugin is generic and exposes filters; the theme hooks in the
+  site-specific rules: posts opted out of indexing in the Search & Social
+  metabox (noindex, or a canonical pointing elsewhere) are left out, the
+  homepage reports the same dateModified its schema does, and the Answers
+  listing and sitemap page report the newer of the page itself or the most
+  recently modified answer.
 - **Scanner: fine-print disclaimer**: results now close with a short note
   that the free scan is informational, reads one page against fixed rules,
   and cannot judge context, and that a full audit can reach different
@@ -146,18 +151,18 @@ Scanner 1.2.0, Hardening 1.1.0.
 
 ### Changed
 
-- **Inset pipe replaces the edge stroke, and becomes house style**: the
+- **Inset accent bar replaces the edge stroke**: the
   homepage answer-first box now has even corners and a thin, soft accent
   bar inside its padding (2px, accent green at 40%), in place of the green
   border on its left edge and the one-sided radius that went with it. The
   treatment is a reusable `.inset-pipe` class for any panel that wants an
-  accent, documented in the README design system. Padding and the bar's
+  accent. Padding and the bar's
   inset tighten on small screens.
 - **Head links trimmed**: the comments feed link (comments are hard-off)
   and the shortlink plus its Link header (permalinks are already short)
   are gone from every page.
-- **Third-party front-end CSS trimmed**: the WordPress AI plugin bundled
-  by the host enqueued its summarization block stylesheet on every public
+- **Third-party front-end CSS trimmed**: a bundled WordPress AI plugin
+  enqueued its summarization block stylesheet on every public
   page. The theme now dequeues it on the front end; the plugin stays active
   for the editor.
 - **Emoji plumbing removed**: the site uses no emoji, so WordPress's
@@ -255,7 +260,7 @@ Scanner 1.2.0, Hardening 1.1.0.
 - **Editor typography**: the block editor mirrors the front-end entry
   typography (fonts, sizes, colors, list indents, content width) via
   `assets/css/editor.css`, so posts are written in the type they publish in.
-- **Post navigation**: every post ends with a Previous / All answers / Next
+- **Post navigation**: every post ends with a Previous/All answers/Next
   button row. The "All answers" button remembers the reader's place: opening
   a post from the listing stores which page and item they left from
   (sessionStorage), and the button returns them to that exact spot, with the
@@ -272,9 +277,8 @@ Scanner 1.2.0, Hardening 1.1.0.
   every published Article via blogPost, and each Article carries a
   SpeakableSpecification pointing at the question H1 and the answer lede.
 - **Share card: Fernwell Answers default**: posts and the Answers listing
-  fall back to a section-branded og:image (`assets/og-card-answers.png`,
-  generated in the FMG card's design language; replace the file to
-  redesign). Per-post social images still override it.
+  fall back to a section-branded og:image (`assets/og-card-answers.png`).
+  Per-post social images still override it.
 - **Metabox: live share preview**: the Search & Social box shows a
   Yoast-style card preview (image, site, title with the Fernwell Answers
   suffix, description) that updates as you type and follows the social
@@ -362,7 +366,7 @@ Scanner 1.2.0, Hardening 1.1.0.
   medical-review markup), self-contained quotable-claim density, and claims
   backed by authoritative outbound sources (.gov/.edu/journal/DOI).
 - **Scanner: two-dial results**: Readability and Citability render as separate dials,
-  each with its own band (Citability bands: Citable / Thin / Anonymous). Both scores
+  each with its own band (Citability bands: Citable/Thin/Anonymous). Both scores
   now appear in the email and copy-to-clipboard summaries and the mail subject.
 - **Theme: public `/llms.txt`**: the exact `/llms.txt` path bypasses the Password
   Protected gate so AI crawlers can always read it while the rest of the site stays
@@ -401,8 +405,7 @@ Scanner 1.2.0, Hardening 1.1.0.
   satisfies the scanner's visible-date check), smooth scrolling respects
   reduced-motion settings, the site nav is labeled for screen readers, and the
   contact heading joins the page outline.
-- Scanner plugin header version set to 1.1.0 (dropping the -alpha tag) to match
-  what production actually runs.
+- Scanner plugin header version set to 1.1.0 (dropping the -alpha tag).
 - **Scanner: authoritative sources recognize biomedical databases**: the
   Citability check that counts outbound links to authoritative sources now
   recognizes the canonical genetics and medical databases (OMIM, Ensembl,

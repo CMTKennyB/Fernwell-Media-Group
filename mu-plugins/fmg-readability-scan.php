@@ -8,17 +8,17 @@
  * Drop this file directly into wp-content/mu-plugins/ (no subfolder: mu-plugins
  * only autoloads top-level PHP files).
  *
- * Scoring follows the Fernwell Scanner Scoring Specification v3: eligibility is
- * a set of engine-scoped states, scorability is a state, and the two dials are
- * formative composites of evidence-backed clusters with not-applicable checks
- * removed from the denominator. Integer weights throughout.
+ * Scoring model: eligibility is a set of engine-scoped states, scorability is a
+ * state, and the two dials are formative composites of evidence-backed clusters
+ * with not-applicable checks removed from the denominator. Integer weights
+ * throughout.
  *
  * @package Fernwell
  */
 
 defined( 'ABSPATH' ) || exit;
 
-/** Where the "Talk to Fernwell" button sends results. Change here, changes everywhere. */
+/** Email address the results mailto link sends to. */
 const FMG_SCAN_CONTACT = 'hello@fernwellgroup.com';
 
 /** Scans allowed per IP per hour. */
@@ -124,10 +124,9 @@ function fmg_scan_handle_request( $request ) {
 | unscorable), each cluster's earned/max, each check's credit (0 to 1, or
 | null when not applicable; notes store presence), the eligibility vector and
 | the states. No URL, host, or IP is stored. Cached repeats, admin test scans,
-| and scans of this site itself are left out so the numbers describe the
-| market, not the tool's own benchmarks. The readability column holds the
-| Legibility dial from spec version 3 onward; older rows are v1.2 or v2 and
-| carry no spec_version.
+| and scans of this site itself are left out so the dataset reflects
+| third-party pages only. The readability column stores the Legibility dial.
+| Rows with an empty spec_version predate the current scoring model.
 */
 
 /** Bump when the table shape changes; the table is created or altered on the next request. */
@@ -3297,7 +3296,7 @@ function fmg_scan_shortcode() {
 }
 
 /**
- * Scanner styles, built on the Grove theme tokens.
+ * Scanner styles.
  */
 function fmg_scan_css() {
 	return <<<CSS

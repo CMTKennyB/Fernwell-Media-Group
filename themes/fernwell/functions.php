@@ -1,6 +1,6 @@
 <?php
 /**
- * © 2026 Kenneth Raymond — All rights reserved.
+ * © 2026 Kenneth Raymond. All rights reserved.
  * Part of the Fernwell WordPress theme.
  * Do not copy, modify, or redistribute without permission.
  *
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FERNWELL_VERSION', '2.1.0' );
+define( 'FERNWELL_VERSION', '3.0.0' );
 
 require get_theme_file_path( 'inc/post-meta.php' );
 
@@ -176,7 +176,7 @@ add_action( 'init', 'fernwell_disable_emoji' );
 
 /**
  * Third-party front-end assets the site does not use. The WordPress AI
- * plugin (bundled by the host) enqueues its summarization block styles on
+ * plugin enqueues its summarization block styles on
  * every public page through enqueue_block_assets; the plugin stays active
  * for the editor, the public pages stop carrying its CSS.
  */
@@ -272,8 +272,8 @@ add_action( 'wp_head', 'fernwell_social_meta', 4 );
 
 /**
  * rel=canonical for the Answers listing. Core emits one only on singular
- * pages, so the listing had none even though its og:url and schema already
- * used fernwell_answers_url(). Paginated pages point at themselves.
+ * pages, so the theme adds it here to match the listing's og:url and schema
+ * (fernwell_answers_url()). Paginated pages point at themselves.
  */
 function fernwell_answers_canonical() {
 	if ( ! is_home() || is_front_page() ) {
@@ -364,9 +364,8 @@ add_action( 'template_redirect', 'fernwell_llms_serve' );
 /**
  * Keep the canonical redirect off /llms.txt. With only the theme's query
  * var set, WordPress treats the request as the front page and 301s it to
- * /llms.txt/, so a crawler asking for the file got a redirect before the
- * handler above ever ran. The handler owns the URL now: the bare path
- * serves directly and the slashed form 301s back to it, like robots.txt.
+ * /llms.txt/. Disabling it here lets the handler above own the URL: the
+ * bare path serves directly and the slashed form 301s back to it, like robots.txt.
  */
 function fernwell_llms_canonical( $redirect_url ) {
 	return get_query_var( 'fernwell_llms' ) ? false : $redirect_url;
@@ -393,7 +392,7 @@ function fernwell_llms_answers_section() {
 
 /**
  * Let /llms.txt bypass the Password Protected gate so AI crawlers can always
- * read it, even while the rest of the site is private during the build.
+ * read it while the rest of the site is gated.
  * Scoped to the exact llms.txt path only; every other URL stays gated.
  * No effect when the Password Protected plugin is inactive.
  */
