@@ -1,6 +1,6 @@
 <?php
 /**
- * © 2026 Kenneth Raymond — All rights reserved.
+ * © 2026 Kenneth Raymond. All rights reserved.
  * Part of the Fernwell WordPress theme.
  * Do not copy, modify, or redistribute without permission.
  *
@@ -19,7 +19,7 @@ get_header();
   <div class="wrap">
     <header class="entry-header">
       <h1>Privacy Policy</h1>
-      <div class="meta">Effective July 21, 2026</div>
+      <div class="meta">Effective September 26, 2026</div>
     </header>
     <div class="entry-content">
 
@@ -32,7 +32,7 @@ get_header();
       <p>We use information you provide to respond to your inquiry, to deliver services you request, and to conduct any engagement you enter into with us. We do not use your information for purposes unrelated to the communication or engagement it came from.</p>
 
       <h2>Sharing Information with Third Parties</h2>
-      <p>Fernwell does not sell, rent, or lease its contact lists or visitor information to third parties. We may share information with trusted service providers who help us operate this site, such as our hosting provider, and only for that purpose. We may disclose personal information without notice if required to do so by law, or in the good-faith belief that disclosure is necessary to comply with legal process, protect our rights or property, or act under exigent circumstances to protect personal safety.</p>
+      <p>Fernwell does not sell, rent, or lease its contact lists or visitor information to third parties. We may share information with trusted service providers who help us operate this site, such as our hosting provider and, when you allow analytics, Google Analytics, and only for those purposes. We may disclose personal information without notice if required to do so by law, or in the good-faith belief that disclosure is necessary to comply with legal process, protect our rights or property, or act under exigent circumstances to protect personal safety.</p>
 
       <h2>Tracking User Behavior</h2>
       <p>This site does not track visitor behavior across other websites, does not build visitor profiles, and does not serve behavioral advertising.</p>
@@ -41,7 +41,7 @@ get_header();
       <p>Our hosting infrastructure automatically logs standard technical information about visits, which may include your IP address, browser type, access times, and pages requested. This information is used for the operation and security of the site and to maintain its quality of service.</p>
 
       <h2>Use of Cookies</h2>
-      <p>Our use of cookies, currently limited to strictly functional purposes, is described in our <a href="/cookie-policy/">Cookie Policy</a>.</p>
+      <p>Our use of cookies, including analytics cookies that run only with your consent, is described in our <a href="/cookie-policy/">Cookie Policy</a>.</p>
 
       <h2>Links</h2>
       <p>This site contains links to other websites, including sources for statistics we cite. We are not responsible for the privacy practices or content of external sites, and we encourage you to review the privacy statements of any site you visit from ours.</p>

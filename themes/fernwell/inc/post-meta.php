@@ -1,6 +1,6 @@
 <?php
 /**
- * © 2026 Kenneth Raymond — All rights reserved.
+ * © 2026 Kenneth Raymond. All rights reserved.
  * Part of the Fernwell WordPress theme.
  * Do not copy, modify, or redistribute without permission.
  *
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Meta getters. Empty string / zero means "no override, use the default."
+ * Meta getters. Empty string/zero means "no override, use the default."
  */
 function fernwell_post_seo_title( $post_id ) {
 	return trim( (string) get_post_meta( $post_id, '_fernwell_seo_title', true ) );
