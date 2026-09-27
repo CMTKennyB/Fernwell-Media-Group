@@ -58,6 +58,3 @@ Copy vocabulary: the site's three axes are Readability (can an engine read you),
 | `fmg-readability-scan.php` | FMG AI Readability & Citability Scanner: shortcode `[fmg_readability_scan]`, REST endpoint `POST /wp-json/fmg/v1/scan`, SSRF-guarded fetcher, per-IP rate limiting. Anonymous score log (own table `fmg_scan_log`: scores, category earned/max, check pass/fail; no URL/host/IP; excludes cached, admin, and self scans) with a Tools > Scan Scores page: distributions, averages, per-check pass rates, CSV export |
 | `fmg-hardening.php` | Baseline security: headers, XML-RPC dead (any request 403s at init, RSD link gone from the head), username enumeration closed on every surface (REST users, author archives, users sitemap, canonical redirect, oEmbed), version fingerprint removed |
 
-## Local development
-
-After theme activation or llms.txt/rewrite changes: Settings > Permalinks > Save Changes to flush rewrite rules. (Bumping `FMG_AEO_VERSION` in the AEO mu-plugin also triggers a flush on the next request.)
