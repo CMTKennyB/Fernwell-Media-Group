@@ -49,7 +49,3 @@ Each page outputs one connected JSON-LD graph: the organization and its founder 
 | `fmg-analytics.php` | Google Analytics 4, blocked until the visitor consents through WPConsent; runs on production only and never for administrators |
 | `fmg-readability-scan.php` | The FMG AI Legibility & Citability Scanner: shortcode `[fmg_readability_scan]` and REST endpoint `POST /wp-json/fmg/v1/scan`. Reports whether each major answer engine may use a page and scores the page on Legibility and Citability. Keeps an anonymous score log (no URLs, hosts, or IP addresses) with a report under Tools > Scan Scores |
 | `fmg-hardening.php` | Security headers, XML-RPC disabled, username enumeration blocked, version numbers removed from output |
-
-## Setup
-
-Use this directory as `wp-content` in a WordPress install and activate the Fernwell theme. Then open Settings > Permalinks and click Save Changes so `/llms.txt` resolves.
