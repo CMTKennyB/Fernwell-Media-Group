@@ -36,7 +36,7 @@ get_header();
       <?php endif; ?>
       <aside class="post-cta">
         <h2>Does AI name you?</h2>
-        <p>Start where every AI visibility strategy starts: can an engine actually read you? Run a free, single-page scan for readability and citability. No account. No email.</p>
+        <p>Start where every AI visibility strategy starts: can an engine actually read you? Run a free, single-page scan for legibility and citability. No account. No email.</p>
         <div class="actions">
           <a class="btn primary" href="<?php echo esc_url( home_url( '/#scan' ) ); ?>">Run the free scan</a>
           <a class="btn ghost" href="mailto:hello@fernwellgroup.com?subject=Request%20your%20audit">Request your audit</a>

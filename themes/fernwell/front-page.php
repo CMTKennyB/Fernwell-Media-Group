@@ -55,7 +55,7 @@ get_header();
 <section class="block alt" id="scan">
   <div class="wrap">
     <h2>See how an AI engine sees you</h2>
-    <p class="sub">Start with the first question every AI visibility strategy has to answer: can an engine actually read you? Run a free, single-page scan for readability and citability. No account. No email.</p>
+    <p class="sub">Start with the first question every AI visibility strategy has to answer: can an engine actually read you? Run a free, single-page scan for legibility and citability. No account. No email.</p>
     <?php echo do_shortcode( '[fmg_readability_scan]' ); ?>
   </div>
 </section>

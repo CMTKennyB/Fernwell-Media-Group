@@ -3,7 +3,79 @@
 All notable changes to the Fernwell Media site code (the `fernwell` theme and mu-plugins) are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [3.0.0] - 2026-09-26
+
+### Added
+
+- **Scanner: eligibility layer** (`fmg-readability-scan.php`): per-engine
+  states (Eligible, Ineligible, Reduced, Indeterminate, Not documented) for
+  Google AI Overviews and AI Mode, Gemini app grounding (Google-Extended),
+  ChatGPT search, Bing and Copilot, Perplexity, Claude, Apple, DuckDuckGo,
+  Alexa search, Meta AI and Mistral search, from per-path robots.txt evaluation (Google
+  matching rules, same-token group merging, Applebot fallback, path plus
+  query), noindex scoped by meta name and X-Robots-Tag token, nosnippet and
+  max-snippet:0, canonical (link element and HTTP Link header), and the
+  robots.txt fetch outcome (4xx allow-all, 5xx and 429 indeterminate).
+- **Scanner: scorability state**: under 50 word tokens of server-side main
+  text suppresses both dials instead of capping them.
+- **Scanner: page-type detection** (article-like, Q&A, product, home,
+  About, local) used only for check applicability; not-applicable checks
+  leave the denominator.
+- **Scanner: checks** L4_agree (visible date matches machine date),
+  L4_clean (date red flags: future dates, published after modified,
+  per-request modified stamps, non-ISO dates), C1_identity (home, About and
+  local pages: markup name matches the visible name; well-formed sameAs;
+  LocalBusiness address matches the visible address).
+- **Scanner: fetch** keeps the query string, lowercases scheme and host,
+  follows up to 10 hops with an RFC 3986 resolver, retries a dropped
+  connection once, runs the browser-agent probe only after a failure, and
+  reads robots.txt with a 500 KiB cap and 5 redirect hops.
+- **Scanner: parsing** joins text nodes with spaces, counts Unicode word
+  tokens (CJK per character), chooses the largest main, role=main or
+  article candidate with a 25% floor, strips chrome inside the region,
+  excludes hidden text from every content metric, parses JSON-LD through
+  CDATA and comment wrappers and trailing commas, reduces IRI @type values,
+  walks nested nodes, parses dates as strict ISO 8601 only, reads time
+  elements inside the main region only, and uses a Porter stemmer.
+- **Scanner: challenge fingerprints** tightened to headers, thin bodies and
+  error statuses; soft 404 detection.
+- **Scan Scores page**: eligibility states by engine; spec_version,
+  eligibility and states columns in `fmg_scan_log` (log db version 2);
+  unscorable rows counted separately.
+- **Front end**: eligibility table, state banners, not-applicable rows,
+  cluster confidence labels, band-boundary flag, integer display, an
+  observations list, and fine print naming what the crawl cannot see.
+
+### Changed
+
+- **Readability renamed Legibility** across the scanner: dial label, bands,
+  copy, summary and mailto subject. The shortcode name, file name and the
+  `readability` log column are unchanged.
+- **Scanner scoring model** rebuilt to Scanner Scoring Specification v3:
+  Legibility = Text 40, Extraction 25, Structure 15, Dating 20; Citability
+  = Provenance 50, Verifiability 25, Answer Shape 25; 18 scored checks,
+  integer weights, cluster-weighted aggregation. Check ids are L1 to L4,
+  C1 to C3 and N_ notes.
+- **Scanner copy**: Anthropic blocks read "may reduce"; Perplexity, Meta
+  and Amazon blocks read "not documented"; 4xx errors read "two automated
+  readers from our host".
+- **Scanner cache** keyed on the query string and spec version; indeterminate
+  results cached for 2 minutes; cache consulted before the rate limit.
+- Plugin version 3.0.0.
+
+### Removed
+
+- **Scanner: scored checks** for crawler-token points, HTTPS, redirects,
+  sitemap, ETag and Last-Modified, text ratio, main-region presence, exactly
+  one H1, lists and tables, meta description length, entity property depth,
+  sameAs count, @id graph, date age bands, machine-to-machine date
+  agreement, definition sentence, lede pronoun rule, heading-to-section
+  alignment, statistic density, quotations, credentials, publisher (merged
+  into provenance), section sizing, hedge density, promotional density and
+  sentence length. Those that remain observable are weight-0 notes; hedge
+  density is removed outright.
+- **Scanner: the 39-point cap** and the "Access" and "Indexability"
+  categories (now states).
 
 ## [2.1.0] - 2026-09-11
 
