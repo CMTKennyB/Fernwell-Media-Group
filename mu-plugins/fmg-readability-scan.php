@@ -457,7 +457,7 @@ function fmg_scan_check_rate_limit() {
 	if ( $hit >= FMG_SCAN_RATE_LIMIT ) {
 		return new WP_Error(
 			'fmg_rate_limited',
-			'This is a lot of scans from one place. Try again in an hour, or email us and we will run it for you.',
+			'This is a lot of scans from one place. Try again in an hour.',
 			array( 'status' => 429 )
 		);
 	}
@@ -3285,7 +3285,7 @@ function fmg_scan_shortcode() {
 			<p class="fmg-scan__note">
 				One page, read the way an AI crawler reads it. You get an eligibility check for each engine,
 				from that engine&#8217;s own published rules, and two scores: Legibility, how well a machine can read you,
-				and Citability, whether the page carries what a citation needs. Namability, who gets named in the answer, is the audit.
+				and Citability, whether the page carries what a citation needs. Namability, who gets named in the answer, takes a benchmark across engines and questions, so a single-page scan does not score it.
 			</p>
 		</form>
 		<div class="fmg-scan__status" role="status" aria-live="polite"></div>
@@ -3635,7 +3635,7 @@ function fmg_scan_js() {
       + scoreCard(data.citability, 'Citability', '')
       + (data.citability.score === null ? '' : catsHtml(data.citability.clusters))
       + obsHtml(data.observations || [])
-      + '<p class="fmg-scan__fine">This free scan is informational. It reads one page against fixed rules from one host with two user agents, so it sees how the site treats our scanner, not how it treats a verified engine crawler. It cannot see whether the page is in any engine’s index, how it ranks when an engine searches, who mentions you elsewhere on the web, a Search Console generative AI setting, or a CDN rule aimed at verified crawlers. A scan is reproducible only for the same served page and the same scan date. A high score is raw material, not a forecast. A full Fernwell Media Group audit measures more, and its findings can differ.</p>';
+      + '<p class="fmg-scan__fine">This free scan is informational. It reads one page against fixed rules from one host with two user agents, so it sees how the site treats our scanner, not how it treats a verified engine crawler. It cannot see whether the page is in any engine’s index, how it ranks when an engine searches, who mentions you elsewhere on the web, a Search Console generative AI setting, or a CDN rule aimed at verified crawlers. A scan is reproducible only for the same served page and the same scan date. A high score is raw material, not a forecast. A benchmark across engines and questions measures more, and its findings can differ.</p>';
 
     html += ''
       + '<div class="fmg-cta">'
@@ -3720,7 +3720,7 @@ function fmg_scan_js() {
     lines.push('2.');
     lines.push('3.');
     lines.push('');
-    lines.push('This free scan is informational. A full audit measures more, and its findings can differ.');
+    lines.push('This free scan is informational. A benchmark across engines and questions measures more, and its findings can differ.');
 
     return lines.join('\n');
   }

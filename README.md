@@ -1,6 +1,6 @@
 # Fernwell Media Group
 
-WordPress code for **Fernwell Media Group**, an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond.
+WordPress code for **Fernwell Media Group**, an Answer Engine Optimization (AEO) research and education project founded by Kenneth Raymond.
 
 © 2026 Kenneth Raymond. All rights reserved. Do not copy, modify, or redistribute without permission.
 
@@ -39,7 +39,7 @@ Stone paper background, deep green ink, and apricot accents, with Space Grotesk 
 
 ### Structured data
 
-Each page outputs one connected JSON-LD graph: the organization and its founder on every page, WebSite and WebPage everywhere, Service and FAQPage on the homepage, BreadcrumbList on posts and pages, and Blog and BlogPosting on Fernwell Answers. FAQ and service entries match the visible page copy word for word.
+Each page outputs one connected JSON-LD graph: the organization and its founder on every page, WebSite and WebPage everywhere, FAQPage on the homepage (plus Book once the book's store URL is set), BreadcrumbList on posts and pages, and Blog and BlogPosting on Fernwell Answers. FAQ and book entries match the visible page copy word for word.
 
 ## Must-use plugins: `mu-plugins/`
 

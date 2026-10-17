@@ -21,7 +21,7 @@ get_header();
       <header class="entry-header">
         <a class="kicker" href="<?php echo esc_url( fernwell_answers_url() ); ?>">Fernwell Answers:</a>
         <h1><?php the_title(); ?></h1>
-        <div class="meta">By Kenneth Raymond <span aria-hidden="true">&middot;</span> <time datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>"><?php echo esc_html( get_the_date() ); ?></time> <span aria-hidden="true">&middot;</span> <?php echo esc_html( fernwell_reading_time() ); ?> min read</div>
+        <div class="meta">By <?php echo esc_html( fernwell_byline() ); ?> <span aria-hidden="true">&middot;</span> <time datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>"><?php echo esc_html( get_the_date() ); ?></time> <span aria-hidden="true">&middot;</span> <?php echo esc_html( fernwell_reading_time() ); ?> min read</div>
       </header>
       <div class="entry-content">
         <?php the_content(); ?>
@@ -39,7 +39,9 @@ get_header();
         <p>Start where every AI visibility strategy starts: can an engine actually read you? Run a free, single-page scan for legibility and citability. No account. No email.</p>
         <div class="actions">
           <a class="btn primary" href="<?php echo esc_url( home_url( '/#scan' ) ); ?>">Run the free scan</a>
-          <a class="btn ghost" href="mailto:hello@fernwellgroup.com?subject=Request%20your%20audit">Request your audit</a>
+          <?php if ( fernwell_book_url() ) : ?>
+          <a class="btn ghost" href="<?php echo esc_url( fernwell_book_url() ); ?>">Get the book</a>
+          <?php endif; ?>
         </div>
       </aside>
       <?php

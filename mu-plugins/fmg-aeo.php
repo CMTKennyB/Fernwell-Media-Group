@@ -116,9 +116,9 @@ function fmg_aeo_robots( $output, $is_public ) {
 
 	$body = <<<'ROBOTS'
 # Fernwell Media Group (%%HOST%%)
-# Answer Engine Optimization consultancy. Crawlers are welcome, including
-# AI, answer-engine, and training crawlers. We want this content found,
-# cited, and named in answers; that is the business.
+# Answer Engine Optimization research and education. Crawlers are welcome,
+# including AI, answer-engine, and training crawlers. We want this content
+# found, cited, and named in answers; this is the point.
 # LLM guidance: %%LLMS%%
 
 # Default: everyone allowed, minus admin and internal search

@@ -3,6 +3,44 @@
 All notable changes to the Fernwell Media site code (the `fernwell` theme and mu-plugins) are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- **The site is now a research and education resource.** Fernwell Media
+  Group no longer offers consulting. The homepage, header, posts, structured
+  data, llms.txt and robots.txt now describe a project that studies how AI
+  engines read, cite, and name their sources, and publishes the method.
+- **Homepage**: the hero leads with the free scan and Fernwell Answers. "How
+  does AEO work in practice?" walks through measuring, fixing, and
+  monitoring as steps you can take yourself. The Services section and the
+  spot-check offer are gone, and FAQ answers point to the free scan and to
+  repeat measurement instead of paid work.
+- **Header and posts**: the header button and the closing call to action on
+  every answer now say "Run the free scan."
+- **Scanner**: the form note and both disclaimers now explain that
+  namability takes a benchmark across engines and questions, rather than
+  pointing to an audit. The scan limit message no longer offers to run scans
+  by email.
+- **Legal pages**: the Terms and Privacy Policy no longer refer to consulting
+  services or engagements.
+- **Not-found page**: the message now describes Fernwell as a site, not a
+  company.
+- **Fernwell Answers byline**: every answer is now credited to Kenneth
+  Raymond, on the page, in the feed, and in the structured data.
+
+### Added
+
+- **Privacy Policy: Free Page Scanner section** explains what the scanner
+  keeps: a one-way hash of your IP address for the hourly scan limit, a
+  fifteen-minute copy of each result, and an anonymous score record with no
+  addresses.
+
+- **Book support, hidden until launch**: once the store link for *The
+  Fernwell Scanner 3.0* is set, the book appears on the homepage, in the
+  header, at the end of every answer, in the sitemap, in llms.txt, and as a
+  Book entry in the structured data.
+
 ## [3.0.0] - 2026-09-26
 
 ### Added

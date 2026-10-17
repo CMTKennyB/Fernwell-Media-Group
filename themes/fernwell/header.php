@@ -36,11 +36,13 @@
     </button>
     <nav class="links" id="site-nav" aria-label="Primary">
       <a href="<?php echo esc_url( home_url( '/#how' ) ); ?>">How it works</a>
-      <a href="<?php echo esc_url( home_url( '/#services' ) ); ?>">Services</a>
+      <?php if ( fernwell_book_url() ) : ?>
+      <a href="<?php echo esc_url( home_url( '/#book' ) ); ?>">Book</a>
+      <?php endif; ?>
       <a href="<?php echo esc_url( home_url( '/#faq' ) ); ?>">FAQ</a>
       <a href="<?php echo esc_url( home_url( '/#about' ) ); ?>">About</a>
       <a href="<?php echo esc_url( home_url( '/answers/' ) ); ?>">Answers</a>
-      <a class="cta" href="mailto:hello@fernwellgroup.com?subject=Request%20your%20audit">Request your audit</a>
+      <a class="cta" href="<?php echo esc_url( home_url( '/#scan' ) ); ?>">Run the free scan</a>
     </nav>
   </div>
 </header>

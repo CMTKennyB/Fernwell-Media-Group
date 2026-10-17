@@ -24,12 +24,15 @@ get_header();
 $fernwell_home_sections = array(
 	'#what'     => 'What is Answer Engine Optimization?',
 	'#scan'     => 'See how an AI engine sees you (free scan)',
-	'#how'      => 'How does an AEO engagement work?',
-	'#services' => 'Services',
+	'#how'      => 'How does AEO work in practice?',
 	'#faq'      => 'Frequently asked questions',
 	'#about'    => 'About Fernwell Media Group',
-	'#contact'  => 'Contact',
 );
+if ( fernwell_book_url() ) {
+	$fernwell_home_sections = array_slice( $fernwell_home_sections, 0, 3, true )
+		+ array( '#book' => 'The Fernwell Scanner 3.0 (book)' )
+		+ array_slice( $fernwell_home_sections, 3, null, true );
+}
 
 $fernwell_sitemap_answers = get_posts(
 	array(

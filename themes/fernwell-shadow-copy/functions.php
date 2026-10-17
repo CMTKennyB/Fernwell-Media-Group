@@ -79,6 +79,23 @@ function fernwell_answers_url() {
 }
 
 /**
+ * Store listing for The Fernwell Scanner 3.0 book. Empty until launch, and
+ * while empty every book surface (homepage section, nav link, post CTA
+ * button, sitemap entry, Book schema node, llms.txt line) stays hidden.
+ * Set it here, or define it earlier in wp-config.php.
+ */
+if ( ! defined( 'FERNWELL_BOOK_URL' ) ) {
+	define( 'FERNWELL_BOOK_URL', '' );
+}
+
+/**
+ * The book's store URL, or an empty string before launch.
+ */
+function fernwell_book_url() {
+	return (string) FERNWELL_BOOK_URL;
+}
+
+/**
  * One-line description of the Fernwell Answers section, shared by the
  * meta description and the Blog schema node. Mirrors the visible intro
  * copy in index.php; keep the three in sync.
@@ -206,7 +223,7 @@ remove_action( 'template_redirect', 'wp_shortlink_header', 11 );
  */
 function fernwell_social_meta() {
 	$title       = wp_get_document_title();
-	$description = 'Fernwell Media Group is an independent Answer Engine Optimization (AEO) consultancy founded by Kenneth Raymond. We help businesses get named and cited when AI engines answer.';
+	$description = 'Fernwell Media Group is an Answer Engine Optimization (AEO) research and education project by Kenneth Raymond. It studies how AI engines read, cite, and name sources, and publishes the method.';
 	$url         = home_url( '/' );
 	$type        = 'website';
 
@@ -345,6 +362,11 @@ function fernwell_llms_serve() {
 		if ( file_exists( $file ) ) {
 			header( 'Content-Type: text/plain; charset=utf-8' );
 			$contents = file_get_contents( $file );
+			if ( fernwell_book_url() ) {
+				// The book joins the Resources list, last entry before Key Pages.
+				$book     = '- [The Fernwell Scanner 3.0](' . fernwell_book_url() . '): The book. The full method behind the free scan: every check, why it earns its points, and the published engine rules it rests on.';
+				$contents = str_replace( "\n\n## Key Pages", "\n" . $book . "\n\n## Key Pages", $contents );
+			}
 			$answers  = fernwell_llms_answers_section();
 			if ( $answers ) {
 				$pos = strpos( $contents, '## About' );
@@ -465,11 +487,18 @@ function fernwell_excerpt_ellipsis( $excerpt ) {
 add_filter( 'get_the_excerpt', 'fernwell_excerpt_ellipsis', 20 );
 
 /**
- * Feeds credit the public byline, matching the hardcoded byline in
- * single.php, instead of the account's display name.
+ * Public byline on Fernwell Answers, shared by single.php and feeds. The
+ * schema credits the same person through the #kenneth node.
+ */
+function fernwell_byline() {
+	return 'Kenneth Raymond';
+}
+
+/**
+ * Feeds credit the public byline instead of the account's display name.
  */
 function fernwell_feed_author( $name ) {
-	return is_feed() ? 'Kenneth Raymond' : $name;
+	return is_feed() ? fernwell_byline() : $name;
 }
 add_filter( 'the_author', 'fernwell_feed_author' );
 
@@ -554,9 +583,9 @@ add_filter( 'fmg_aeo_sitemap_entry', 'fernwell_sitemap_entry', 10, 2 );
 /**
  * Structured data: one connected graph, every node cross-referenced by @id.
  *
- * Sitewide: ProfessionalService (#org), Person (#kenneth), WebSite (#website),
- * and a WebPage node for the current URL. Front page adds FAQPage and the four
- * Service nodes. The Answers surfaces (posts page + single posts) add a Blog
+ * Sitewide: Organization (#org), Person (#kenneth), WebSite (#website),
+ * and a WebPage node for the current URL. Front page adds FAQPage, plus a
+ * Book node once FERNWELL_BOOK_URL is set. The Answers surfaces (posts page + single posts) add a Blog
  * node named Fernwell Answers. Singular pages add BreadcrumbList; posts add
  * Article, anchored to the Blog node.
  * The FAQ answers here must mirror the visible copy in front-page.php: the
@@ -573,32 +602,13 @@ function fernwell_schema() {
 		$current_url    = $page_for_posts ? get_permalink( $page_for_posts ) : $base;
 	}
 
-	$services = array(
-		array(
-			'name' => 'AI Visibility Audit',
-			'desc' => 'Find out whether AI names you, who it names instead, and why. We test the questions your customers actually ask across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, benchmark your namability against competitors, and deliver a prioritized list of fixes.',
-		),
-		array(
-			'name' => 'AEO Sprint',
-			'desc' => 'We turn the audit into the stuff engines need: structured data, entity consistency, information architecture, and answer-first rewrites of the pages most likely to shape AI answers about you.',
-		),
-		array(
-			'name' => 'AI Visibility Monitoring',
-			'desc' => 'We continue testing the questions that matter in your market across leading AI engines and track namability, citation share, and competitor movement over time. You see what changed, what didn\'t, and what to do next.',
-		),
-		array(
-			'name' => 'Team Enablement',
-			'desc' => 'Workshops and advisory for marketing teams and agencies that want to build AEO capability in-house. We’ll teach the framework, measurement, and implementation. Your team keeps the method.',
-		),
-	);
-
 	$graph = array(
 		array(
-			'@type'         => 'ProfessionalService',
+			'@type'         => 'Organization',
 			'@id'           => $base . '#org',
 			'name'          => 'Fernwell Media Group',
 			'alternateName' => 'FMG',
-			'description'   => 'Independent Answer Engine Optimization (AEO) consultancy: AI visibility audits, schema and entity implementation, and AI visibility monitoring across ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews.',
+			'description'   => 'Answer Engine Optimization (AEO) research and education: Fernwell Answers, a free AI readability and citability scanner, and the published method behind both.',
 			'url'           => $base,
 			'image'         => array(
 				'@type'  => 'ImageObject',
@@ -607,7 +617,6 @@ function fernwell_schema() {
 				'height' => 630,
 			),
 			'founder'       => array( '@id' => $base . '#kenneth' ),
-			'areaServed'    => 'United States',
 			'email'         => 'mailto:hello@fernwellgroup.com',
 			'knowsAbout'    => array(
 				'Answer Engine Optimization',
@@ -624,8 +633,8 @@ function fernwell_schema() {
 			'@type'       => 'Person',
 			'@id'         => $base . '#kenneth',
 			'name'        => 'Kenneth Raymond',
-			'jobTitle'    => 'Founder, Answer Engine Optimization Consultant',
-			'description' => 'Communications systems and knowledge infrastructure specialist. Founder of Fernwell Media Group, an independent AEO consultancy.',
+			'jobTitle'    => 'Founder, Fernwell Media Group',
+			'description' => 'Communications systems and knowledge infrastructure specialist. Founder of Fernwell Media Group, an AEO research and education project.',
 			'url'         => $base . '#about',
 			'email'       => 'mailto:hello@fernwellgroup.com',
 			'worksFor'    => array( '@id' => $base . '#org' ),
@@ -701,18 +710,18 @@ function fernwell_schema() {
 		$graph[] = $blog;
 	}
 
-	if ( is_front_page() ) {
-		foreach ( $services as $i => $svc ) {
-			$graph[] = array(
-				'@type'       => 'Service',
-				'@id'         => $base . '#service-' . ( $i + 1 ),
-				'name'        => $svc['name'],
-				'description' => $svc['desc'],
-				'serviceType' => 'Answer Engine Optimization',
-				'provider'    => array( '@id' => $base . '#org' ),
-				'areaServed'  => 'United States',
-			);
-		}
+	if ( is_front_page() && fernwell_book_url() ) {
+		// Description mirrors the visible book section copy in front-page.php.
+		$graph[] = array(
+			'@type'       => 'Book',
+			'@id'         => $base . '#book',
+			'name'        => 'The Fernwell Scanner 3.0',
+			'description' => 'The full method behind the free scan: every check, why it earns its points, and the published engine rules it rests on. Read it to understand your score, or to run the same measurements yourself.',
+			'author'      => array( '@id' => $base . '#kenneth' ),
+			'url'         => fernwell_book_url(),
+			'about'       => 'Answer Engine Optimization',
+			'inLanguage'  => 'en-US',
+		);
 	}
 
 	if ( is_singular() && ! is_front_page() ) {
@@ -752,15 +761,15 @@ function fernwell_schema() {
 			),
 			array(
 				'q' => 'How do I know if AI engines are naming me?',
-				'a' => 'Ask the questions your customers actually ask and measure who gets named, who gets cited, and who gets left out. A single prompt tells you very little. A repeatable benchmark across engines, questions, and competitors measures your namability and shows who is taking your place in the answer. This is what the AI Visibility Audit does.',
+				'a' => 'Ask the questions your customers actually ask and measure who gets named, who gets cited, and who gets left out. A single prompt tells you very little. A repeatable benchmark across engines, questions, and competitors measures your namability and shows who is taking your place in the answer. The free scan above checks the groundwork: whether an engine can read and cite the page.',
 			),
 			array(
 				'q' => 'How long does AEO take to work?',
-				'a' => 'There isn’t a universal timeline. Technical changes can appear as engines recrawl, while changes in namability and citation share can take longer and vary by engine. This is why we keep testing the same questions after changes are made. Monitoring shows what moved, what didn’t, and what to do next.',
+				'a' => 'There isn’t a universal timeline. Technical changes can appear as engines recrawl, while changes in namability and citation share can take longer and vary by engine. This is why you keep testing the same questions after every change. Repeat measurement shows what moved, what didn’t, and what to do next.',
 			),
 			array(
 				'q' => 'Do I need AEO if I already invest in SEO?',
-				'a' => 'Probably. Strong SEO gives AEO a better foundation, but it does not answer the same question. SEO tells you whether people can find you in search results. AEO tells you whether an engine understands, cites, and names you when it answers that question. An audit shows whether there is actually a gap before you invest in fixing one.',
+				'a' => 'Probably. Strong SEO gives AEO a better foundation, but it does not answer the same question. SEO tells you whether people can find you in search results. AEO tells you whether an engine understands, cites, and names you when it answers that question. Measure first: a benchmark shows whether there is actually a gap before you invest in fixing one.',
 			),
 		);
 

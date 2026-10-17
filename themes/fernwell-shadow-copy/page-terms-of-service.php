@@ -27,7 +27,7 @@ get_header();
       <p>These Terms of Service constitute an agreement between you and Fernwell Media Group ("Fernwell," "we," "us," or "our") governing your use of fernwellgroup.com (the "Site"). By using the Site, you accept these terms as they appear on the date of your use. If you do not agree, do not use the Site. These terms should be read together with our <a href="/privacy-policy/">Privacy Policy</a> and <a href="/cookie-policy/">Cookie Policy</a>.</p>
 
       <h2>Purpose of the Site</h2>
-      <p>The Site describes Fernwell's Answer Engine Optimization consulting services and publishes educational content about AI search visibility. Content on the Site is provided for general informational purposes only. It is not professional advice for your specific situation, and your use of the Site does not create a client or advisory relationship. An engagement with Fernwell begins only when agreed in writing.</p>
+      <p>The Site publishes educational content about AI search visibility and a free page scanner. Content on the Site is provided for general informational purposes only. It is not professional advice for your specific situation, and your use of the Site does not create a client or advisory relationship.</p>
 
       <h2>Privacy</h2>
       <p>Your use of the Site is also governed by our <a href="/privacy-policy/">Privacy Policy</a>, which describes what information the Site handles and how it is used.</p>

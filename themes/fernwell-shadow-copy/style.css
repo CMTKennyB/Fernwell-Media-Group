@@ -1,9 +1,9 @@
 /*
-Theme Name: Fernwell - Shadow Copy
+Theme Name: Fernwell Shadow Copy
 Theme URI: https://fernwellgroup.com/
 Author: Fernwell Media Group
 Author URI: https://fernwellgroup.com/
-Description: Custom theme for Fernwell Media Group, an independent Answer Engine Optimization consultancy. Grove palette: stone paper, deep green, apricot accents. Built AEO-first with structured data and answer-first layout.
+Description: Custom theme for Fernwell Media Group, an Answer Engine Optimization research and education project. Grove palette: stone paper, deep green, apricot accents. Built AEO-first with structured data and answer-first layout.
 Version: 3.0.0
 Requires at least: 6.0
 Requires PHP: 7.4
@@ -162,15 +162,8 @@ section.block.alt .answer-first { background: var(--paper); }
 .step h3 { font-size: 1.14rem; margin-bottom: 8px; }
 .step p { color: var(--ink-soft); font-size: .95rem; }
 
-/* Services */
-.services { margin-top: 46px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px; }
-@media (max-width: 700px) { .services { grid-template-columns: 1fr; } }
-.card { border: 1px solid var(--line); border-radius: 12px; padding: 30px; background: var(--paper); display: flex; flex-direction: column; }
-.card h3 { font-size: 1.2rem; margin-bottom: 10px; }
-.card p { color: var(--ink-soft); font-size: .96rem; flex: 1; }
-.card .tag { font-size: .76rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
-.card a { margin-top: 18px; color: var(--accent); font-weight: 600; text-decoration: none; font-size: .95rem; }
-.card a:hover { text-decoration: underline; color: var(--accent-hover); }
+/* Book (renders once FERNWELL_BOOK_URL is set) */
+.book .actions { margin-top: 30px; display: flex; gap: 14px; flex-wrap: wrap; }
 
 /* FAQ */
 .faq { margin-top: 38px; max-width: 760px; }
@@ -194,16 +187,6 @@ section.block.alt .answer-first { background: var(--paper); }
 .headshot img { width: 100%; height: 100%; object-fit: cover; }
 .about-grid p { color: var(--ink-soft); margin-bottom: 14px; }
 @media (max-width: 640px) { .about-grid { grid-template-columns: 1fr; } }
-
-/* Contact */
-.contact-box { margin-top: 38px; background: var(--dark); color: #fff; border-radius: 16px; padding: 52px 48px; text-align: center; }
-.contact-box h2, .contact-box h3 { font-size: 1.6rem; letter-spacing: -0.01em; }
-.contact-box p { color: var(--dark-text); margin: 14px auto 28px; max-width: 500px; }
-.stackmark { margin-bottom: 26px; }
-.stackmark .mono { font-family: var(--font-display); font-weight: 700; font-size: 40px; letter-spacing: .05em; color: var(--paper); line-height: 1; }
-.stackmark .mono .m { color: var(--fill); }
-.stackmark .rule { width: 74px; height: 2px; background: var(--fill); margin: 9px auto 9px; }
-.stackmark .word { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--dark-text); font-weight: 600; }
 
 /* Footer */
 footer.site { border-top: 1px solid var(--line); padding: 36px 0; color: var(--ink-soft); font-size: .88rem; }
@@ -296,7 +279,7 @@ footer.site a { color: var(--ink-soft); }
   padding: 12px 20px; border-radius: 8px; font-weight: 600; text-decoration: none;
 }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
-.stats :focus-visible, .contact-box :focus-visible, footer.site :focus-visible { outline-color: var(--fill); }
+.stats :focus-visible, footer.site :focus-visible { outline-color: var(--fill); }
 .faq summary:focus-visible { outline-offset: 4px; }
 
 /* Small screens: tighter vertical rhythm and box padding */
@@ -305,7 +288,6 @@ footer.site a { color: var(--ink-soft); }
   section.block { padding: 60px 0; }
   .stats { padding: 40px 0; }
   .stats .grid { gap: 24px; }
-  .contact-box { padding: 38px 24px; }
   .answer-first { padding: 18px; font-size: 1rem; }
   .inset-pipe { padding-left: 30px; }
   .inset-pipe::before { left: 13px; top: 20px; bottom: 20px; }

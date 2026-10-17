@@ -21,7 +21,7 @@ get_header();
       <h1>This page isn't the answer.</h1>
     </header>
     <div class="entry-content">
-      <p>The URL you followed doesn't exist here, which is ironic for a company in the findability business, and we'd rather own that than show you a generic error.</p>
+      <p>The URL you followed doesn't exist here, which is ironic for a site in the findability space, and we'd rather own this than show you a generic error.</p>
       <p>Here's where the answers actually live:</p>
       <div class="reentry-actions">
         <a class="btn primary" href="<?php echo esc_url( home_url( '/' ) ); ?>">Back to the homepage</a>
