@@ -26,6 +26,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   services or engagements.
 - **Not-found page**: the message now describes Fernwell as a site, not a
   company.
+- **Structured data**: the organization's `sameAs` now points to the public
+  source repository, github.com/CMTKennyB/Fernwell-Media-Group.
 - **Fernwell Answers byline**: every answer is now credited to Kenneth
   Raymond, on the page, in the feed, and in the structured data.
 

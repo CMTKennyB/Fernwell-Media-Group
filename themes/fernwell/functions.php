@@ -626,7 +626,7 @@ function fernwell_schema() {
 				'AI search visibility',
 			),
 			'sameAs'        => array(
-				'https://github.com/CMTKennyB/Fernwell-Media',
+				'https://github.com/CMTKennyB/Fernwell-Media-Group',
 			),
 		),
 		array(
