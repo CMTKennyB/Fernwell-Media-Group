@@ -17,7 +17,8 @@ A custom theme with no page builder and no SEO plugin. The theme writes its own 
 | File | Role |
 | --- | --- |
 | `style.css` | Design system: color tokens, typography, components, post styles |
-| `functions.php` | Theme setup, head metadata (description, Open Graph, Twitter), the JSON-LD graph, llms.txt, sitemap rules, reading time, and removal of unused core output (comments, tags, emoji scripts) |
+| `functions.php` | Theme setup, head metadata (description, Open Graph, Twitter), the homepage FAQ copy, llms.txt, sitemap rules, reading time, and removal of unused core output (comments, tags, emoji scripts) |
+| `inc/schema.php` | The JSON-LD graph |
 | `inc/post-meta.php` | Search & Social panel on posts: SEO title, meta description, canonical URL, social image, noindex, live share preview |
 | `header.php`/`footer.php` | Site header and footer, skip link, main landmark, copyright year |
 | `front-page.php` | Homepage |
@@ -39,7 +40,7 @@ Stone paper background, deep green ink, and apricot accents, with Space Grotesk 
 
 ### Structured data
 
-Each page outputs one connected JSON-LD graph: the organization and its founder on every page, WebSite and WebPage everywhere, FAQPage on the homepage (plus Book once the book's store URL is set), BreadcrumbList on posts and pages, and Blog and BlogPosting on Fernwell Answers. FAQ and book entries match the visible page copy word for word.
+Each page outputs one connected JSON-LD graph: the organization, its founder, and the WebSite on every page; a WebPage for the page's own address on the homepage, posts, pages, and every page of the Answers listing (not on 404s or search results); FAQPage as part of the homepage (plus Book once the book's store URL is set); BreadcrumbList on posts and pages; and Blog and BlogPosting on Fernwell Answers. Each page and its main entity reference each other both ways. The homepage FAQ copy and its schema share one source, and book entries match the visible page copy word for word.
 
 ## Must-use plugins: `mu-plugins/`
 

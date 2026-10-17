@@ -27,7 +27,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Not-found page**: the message now describes Fernwell as a site, not a
   company.
 - **Structured data**: the organization's `sameAs` now points to the public
-  source repository, github.com/CMTKennyB/Fernwell-Media-Group.
+  source repository, github.com/CMTKennyB/Fernwell-Media-Group. Pages
+  and what they present now reference each other both ways (`mainEntity` and
+  `mainEntityOfPage`): the Fernwell Answers listing with the blog, and each
+  answer with its article. The homepage FAQ is now linked to the homepage as
+  one of its parts.
+- **Structured data accuracy**: later pages of the Fernwell Answers listing
+  now describe their own address, matching their canonical link, instead of
+  claiming to be the first page. Not-found pages and search results no
+  longer describe themselves as the homepage; they carry only the site-wide
+  organization, founder, and website details.
+- **Structured data safety**: the data block now escapes characters that
+  could otherwise end it early inside the page.
+- **One source for the homepage FAQ**: the visible questions and answers and
+  their structured data now come from the same copy, so the two cannot drift
+  apart. The structured data code now lives in its own file,
+  `themes/fernwell/inc/schema.php`.
 - **Fernwell Answers byline**: every answer is now credited to Kenneth
   Raymond, on the page, in the feed, and in the structured data.
 

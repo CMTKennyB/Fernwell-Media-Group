@@ -63,8 +63,13 @@ get_header();
 <section class="block" id="what">
   <div class="wrap">
     <h2>What is Answer Engine Optimization?</h2>
+    <?php
+    // Copy comes from fernwell_faqs(), shared with the FAQPage schema.
+    $fernwell_faqs = fernwell_faqs();
+    $fernwell_lead = array_shift( $fernwell_faqs );
+    ?>
     <div class="answer-first inset-pipe">
-      <strong>Answer Engine Optimization (AEO)</strong> is the practice of making you understandable, citable, and nameable by the AI engines answering your customers’ questions. Where SEO competes for rankings, AEO competes for inclusion in the answer.
+      <strong><?php echo esc_html( $fernwell_lead['term'] ); ?></strong><?php echo esc_html( substr( $fernwell_lead['a'], strlen( $fernwell_lead['term'] ) ) ); ?>
     </div>
     <p class="sub">AI engines need to understand who you are before they can cite you. A readable website alone doesn’t put you in the answer. AEO connects the pieces through information architecture: clear entity information, structured data that machines can parse, and content built around real questions. This site puts those principles into practice, from the information you see to the markup underneath it. View the source code, and you see the method at work.</p>
   </div>
@@ -116,22 +121,12 @@ if ( $fernwell_book ) :
   <div class="wrap">
     <h2>Frequently asked questions</h2>
     <div class="faq">
+      <?php foreach ( $fernwell_faqs as $fernwell_faq ) : ?>
       <details>
-        <summary>What’s the difference between AEO and SEO?</summary>
-        <div class="a">SEO optimizes for visibility in ranked search results. AEO optimizes for inclusion in AI-generated answers. Strong SEO helps engines find you, but it does not guarantee they will understand, cite, or name you. AEO builds on this foundation with entity definition, structured data, information architecture, answer-first content, and direct measurement of AI answers.</div>
+        <summary><?php echo esc_html( $fernwell_faq['q'] ); ?></summary>
+        <div class="a"><?php echo esc_html( $fernwell_faq['a'] ); ?></div>
       </details>
-      <details>
-        <summary>How do I know if AI engines are naming me?</summary>
-        <div class="a">Ask the questions your customers actually ask and measure who gets named, who gets cited, and who gets left out. A single prompt tells you very little. A repeatable benchmark across engines, questions, and competitors measures your namability and shows who is taking your place in the answer. The free scan above checks the groundwork: whether an engine can read and cite the page.</div>
-      </details>
-      <details>
-        <summary>How long does AEO take to work?</summary>
-        <div class="a">There isn’t a universal timeline. Technical changes can appear as engines recrawl, while changes in namability and citation share can take longer and vary by engine. This is why you keep testing the same questions after every change. Repeat measurement shows what moved, what didn’t, and what to do next.</div>
-      </details>
-      <details>
-        <summary>Do I need AEO if I already invest in SEO?</summary>
-        <div class="a">Probably. Strong SEO gives AEO a better foundation, but it does not answer the same question. SEO tells you whether people can find you in search results. AEO tells you whether an engine understands, cites, and names you when it answers that question. Measure first: a benchmark shows whether there is actually a gap before you invest in fixing one.</div>
-      </details>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
