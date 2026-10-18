@@ -6,7 +6,8 @@
  *
  * File: Theme Functions
  * Purpose: Theme supports, style and font enqueue, SVG favicon fallback,
- * and the site-wide JSON-LD schema graph.
+ * head metadata, llms.txt, and sitemap rules. The JSON-LD schema graph
+ * lives in inc/schema.php.
  *
  * Location:
  *   /wp-content/themes/fernwell/functions.php
@@ -19,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'FERNWELL_VERSION', '3.0.0' );
 
 require get_theme_file_path( 'inc/post-meta.php' );
+require get_theme_file_path( 'inc/schema.php' );
 
 /**
  * Theme supports.
@@ -93,6 +95,38 @@ if ( ! defined( 'FERNWELL_BOOK_URL' ) ) {
  */
 function fernwell_book_url() {
 	return (string) FERNWELL_BOOK_URL;
+}
+
+/**
+ * Homepage questions and answers, the single source for the visible copy in
+ * front-page.php and the FAQPage schema. The first entry is the answer-first
+ * definition box; its 'term' is the bolded lead the answer opens with. The
+ * rest render as the FAQ section, in order. Plain text: templates escape it.
+ */
+function fernwell_faqs() {
+	return array(
+		array(
+			'q'    => 'What is Answer Engine Optimization (AEO)?',
+			'term' => 'Answer Engine Optimization (AEO)',
+			'a'    => 'Answer Engine Optimization (AEO) is the practice of making you understandable, citable, and nameable by the AI engines answering your customers’ questions. Where SEO competes for rankings, AEO competes for inclusion in the answer.',
+		),
+		array(
+			'q' => 'What’s the difference between AEO and SEO?',
+			'a' => 'SEO optimizes for visibility in ranked search results. AEO optimizes for inclusion in AI-generated answers. Strong SEO helps engines find you, but it does not guarantee they will understand, cite, or name you. AEO builds on this foundation with entity definition, structured data, information architecture, answer-first content, and direct measurement of AI answers.',
+		),
+		array(
+			'q' => 'How do I know if AI engines are naming me?',
+			'a' => 'Ask the questions your customers actually ask and measure who gets named, who gets cited, and who gets left out. A single prompt tells you very little. A repeatable benchmark across engines, questions, and competitors measures your namability and shows who is taking your place in the answer. The free scan above checks the groundwork: whether an engine can read and cite the page.',
+		),
+		array(
+			'q' => 'How long does AEO take to work?',
+			'a' => 'There isn’t a universal timeline. Technical changes can appear as engines recrawl, while changes in namability and citation share can take longer and vary by engine. This is why you keep testing the same questions after every change. Repeat measurement shows what moved, what didn’t, and what to do next.',
+		),
+		array(
+			'q' => 'Do I need AEO if I already invest in SEO?',
+			'a' => 'Probably. Strong SEO gives AEO a better foundation, but it does not answer the same question. SEO tells you whether people can find you in search results. AEO tells you whether an engine understands, cites, and names you when it answers that question. Measure first: a benchmark shows whether there is actually a gap before you invest in fixing one.',
+		),
+	);
 }
 
 /**
@@ -288,6 +322,14 @@ function fernwell_social_meta() {
 add_action( 'wp_head', 'fernwell_social_meta', 4 );
 
 /**
+ * URL of the Answers listing page being viewed: the listing itself on page
+ * one, the paginated URL after that. Shared by the canonical and the schema.
+ */
+function fernwell_answers_page_url() {
+	return is_paged() ? get_pagenum_link( (int) get_query_var( 'paged' ) ) : fernwell_answers_url();
+}
+
+/**
  * rel=canonical for the Answers listing. Core emits one only on singular
  * pages, so the theme adds it here to match the listing's og:url and schema
  * (fernwell_answers_url()). Paginated pages point at themselves.
@@ -296,8 +338,7 @@ function fernwell_answers_canonical() {
 	if ( ! is_home() || is_front_page() ) {
 		return;
 	}
-	$url = is_paged() ? get_pagenum_link( (int) get_query_var( 'paged' ) ) : fernwell_answers_url();
-	echo '<link rel="canonical" href="' . esc_url( $url ) . '" />' . "\n";
+	echo '<link rel="canonical" href="' . esc_url( fernwell_answers_page_url() ) . '" />' . "\n";
 }
 add_action( 'wp_head', 'fernwell_answers_canonical', 4 );
 
@@ -579,255 +620,3 @@ function fernwell_sitemap_entry( $entry, $post ) {
 	return $entry;
 }
 add_filter( 'fmg_aeo_sitemap_entry', 'fernwell_sitemap_entry', 10, 2 );
-
-/**
- * Structured data: one connected graph, every node cross-referenced by @id.
- *
- * Sitewide: Organization (#org), Person (#kenneth), WebSite (#website),
- * and a WebPage node for the current URL. Front page adds FAQPage, plus a
- * Book node once FERNWELL_BOOK_URL is set. The Answers surfaces (posts page + single posts) add a Blog
- * node named Fernwell Answers. Singular pages add BreadcrumbList; posts add
- * Article, anchored to the Blog node.
- * The FAQ answers here must mirror the visible copy in front-page.php: the
- * answer-first box (the "What is AEO?" entry) and the FAQ section, verbatim.
- */
-function fernwell_schema() {
-	$base = home_url( '/' );
-
-	$current_url = $base;
-	if ( is_singular() ) {
-		$current_url = get_permalink();
-	} elseif ( is_home() ) {
-		$page_for_posts = get_option( 'page_for_posts' );
-		$current_url    = $page_for_posts ? get_permalink( $page_for_posts ) : $base;
-	}
-
-	$graph = array(
-		array(
-			'@type'         => 'Organization',
-			'@id'           => $base . '#org',
-			'name'          => 'Fernwell Media Group',
-			'alternateName' => 'FMG',
-			'description'   => 'Answer Engine Optimization (AEO) research and education: Fernwell Answers, a free AI readability and citability scanner, and the published method behind both.',
-			'url'           => $base,
-			'image'         => array(
-				'@type'  => 'ImageObject',
-				'url'    => get_theme_file_uri( 'assets/og-card.png' ),
-				'width'  => 1200,
-				'height' => 630,
-			),
-			'founder'       => array( '@id' => $base . '#kenneth' ),
-			'email'         => 'mailto:hello@fernwellgroup.com',
-			'knowsAbout'    => array(
-				'Answer Engine Optimization',
-				'Generative Engine Optimization',
-				'Structured data and schema.org markup',
-				'Entity SEO',
-				'AI search visibility',
-			),
-			'sameAs'        => array(
-				'https://github.com/CMTKennyB/Fernwell-Media-Group',
-			),
-		),
-		array(
-			'@type'       => 'Person',
-			'@id'         => $base . '#kenneth',
-			'name'        => 'Kenneth Raymond',
-			'jobTitle'    => 'Founder, Fernwell Media Group',
-			'description' => 'Communications systems and knowledge infrastructure specialist. Founder of Fernwell Media Group, an AEO research and education project.',
-			'url'         => $base . '#about',
-			'email'       => 'mailto:hello@fernwellgroup.com',
-			'worksFor'    => array( '@id' => $base . '#org' ),
-			'knowsAbout'  => array(
-				'Answer Engine Optimization',
-				'Communications systems',
-				'Knowledge infrastructure',
-				'Information architecture',
-			),
-			'sameAs'      => array(
-				'https://www.linkedin.com/in/kenny-raymond/',
-			),
-			'hasCredential' => array(
-				'@type'              => 'EducationalOccupationalCredential',
-				'credentialCategory' => 'degree',
-				'educationalLevel'   => 'Bachelor of Science',
-				'name'               => 'BS Human Communication',
-				'recognizedBy'       => array(
-					'@type' => 'CollegeOrUniversity',
-					'name'  => 'Arizona State University',
-				),
-			),
-		),
-		array(
-			'@type'     => 'WebSite',
-			'@id'       => $base . '#website',
-			'name'      => 'Fernwell Media Group',
-			'url'       => $base,
-			'publisher' => array( '@id' => $base . '#org' ),
-			'inLanguage' => 'en-US',
-		),
-		array(
-			'@type'      => 'WebPage',
-			'@id'        => $current_url . '#webpage',
-			'url'        => $current_url,
-			'name'       => wp_get_document_title(),
-			'isPartOf'   => array( '@id' => $base . '#website' ),
-			'about'      => array( '@id' => $base . '#org' ),
-			'inLanguage' => 'en-US',
-		),
-	);
-
-	if ( is_front_page() ) {
-		// Anchor the homepage's dates to real site-content activity.
-		$home   = fernwell_home_dates();
-		$wp_key = array_key_last( $graph );
-		$graph[ $wp_key ]['datePublished'] = $home['published'];
-		$graph[ $wp_key ]['dateModified']  = $home['modified'];
-	}
-
-	$answers_url = fernwell_answers_url();
-
-	if ( is_home() || is_singular( 'post' ) ) {
-		$blog = array(
-			'@type'       => 'Blog',
-			'@id'         => $answers_url . '#blog',
-			'name'        => 'Fernwell Answers',
-			'description' => fernwell_answers_description(),
-			'url'         => $answers_url,
-			'publisher'   => array( '@id' => $base . '#org' ),
-			'isPartOf'    => array( '@id' => $base . '#website' ),
-			'inLanguage'  => 'en-US',
-		);
-		// The listing enumerates the series. Single posts point up through
-		// isPartOf instead: on a post page the other posts would be bare @id
-		// references that validators flag, and the list grows with every post.
-		if ( is_home() ) {
-			$blog['blogPost'] = array();
-			foreach ( get_posts( array( 'numberposts' => -1, 'post_status' => 'publish', 'fields' => 'ids' ) ) as $answer_id ) {
-				$blog['blogPost'][] = array( '@id' => get_permalink( $answer_id ) . '#article' );
-			}
-		}
-		$graph[] = $blog;
-	}
-
-	if ( is_front_page() && fernwell_book_url() ) {
-		// Description mirrors the visible book section copy in front-page.php.
-		$graph[] = array(
-			'@type'       => 'Book',
-			'@id'         => $base . '#book',
-			'name'        => 'The Fernwell Scanner 3.0',
-			'description' => 'The full method behind the free scan: every check, why it earns its points, and the published engine rules it rests on. Read it to understand your score, or to run the same measurements yourself.',
-			'author'      => array( '@id' => $base . '#kenneth' ),
-			'url'         => fernwell_book_url(),
-			'about'       => 'Answer Engine Optimization',
-			'inLanguage'  => 'en-US',
-		);
-	}
-
-	if ( is_singular() && ! is_front_page() ) {
-		$crumbs = array(
-			array( 'name' => 'Home', 'item' => $base ),
-		);
-		if ( is_singular( 'post' ) ) {
-			$crumbs[] = array( 'name' => 'Fernwell Answers', 'item' => $answers_url );
-		}
-		$crumbs[] = array( 'name' => get_the_title(), 'item' => $current_url );
-
-		$items = array();
-		foreach ( $crumbs as $i => $crumb ) {
-			$items[] = array(
-				'@type'    => 'ListItem',
-				'position' => $i + 1,
-				'name'     => $crumb['name'],
-				'item'     => $crumb['item'],
-			);
-		}
-		$graph[] = array(
-			'@type'           => 'BreadcrumbList',
-			'@id'             => $current_url . '#breadcrumb',
-			'itemListElement' => $items,
-		);
-	}
-
-	if ( is_front_page() ) {
-		$faqs = array(
-			array(
-				'q' => 'What is Answer Engine Optimization (AEO)?',
-				'a' => 'Answer Engine Optimization (AEO) is the practice of making you understandable, citable, and nameable by the AI engines answering your customers’ questions. Where SEO competes for rankings, AEO competes for inclusion in the answer.',
-			),
-			array(
-				'q' => 'What’s the difference between AEO and SEO?',
-				'a' => 'SEO optimizes for visibility in ranked search results. AEO optimizes for inclusion in AI-generated answers. Strong SEO helps engines find you, but it does not guarantee they will understand, cite, or name you. AEO builds on this foundation with entity definition, structured data, information architecture, answer-first content, and direct measurement of AI answers.',
-			),
-			array(
-				'q' => 'How do I know if AI engines are naming me?',
-				'a' => 'Ask the questions your customers actually ask and measure who gets named, who gets cited, and who gets left out. A single prompt tells you very little. A repeatable benchmark across engines, questions, and competitors measures your namability and shows who is taking your place in the answer. The free scan above checks the groundwork: whether an engine can read and cite the page.',
-			),
-			array(
-				'q' => 'How long does AEO take to work?',
-				'a' => 'There isn’t a universal timeline. Technical changes can appear as engines recrawl, while changes in namability and citation share can take longer and vary by engine. This is why you keep testing the same questions after every change. Repeat measurement shows what moved, what didn’t, and what to do next.',
-			),
-			array(
-				'q' => 'Do I need AEO if I already invest in SEO?',
-				'a' => 'Probably. Strong SEO gives AEO a better foundation, but it does not answer the same question. SEO tells you whether people can find you in search results. AEO tells you whether an engine understands, cites, and names you when it answers that question. Measure first: a benchmark shows whether there is actually a gap before you invest in fixing one.',
-			),
-		);
-
-		$main = array();
-		foreach ( $faqs as $faq ) {
-			$main[] = array(
-				'@type'          => 'Question',
-				'name'           => $faq['q'],
-				'acceptedAnswer' => array(
-					'@type' => 'Answer',
-					'text'  => $faq['a'],
-				),
-			);
-		}
-		$graph[] = array(
-			'@type'      => 'FAQPage',
-			'@id'        => $base . '#faq',
-			'mainEntity' => $main,
-		);
-	}
-
-	if ( is_singular( 'post' ) ) {
-		global $post;
-		$abstract = fernwell_post_meta_description( $post->ID );
-		if ( ! $abstract ) {
-			$abstract = wp_strip_all_tags( get_the_excerpt( $post ) );
-		}
-		$article = array(
-			'@type'            => 'BlogPosting',
-			'@id'              => $current_url . '#article',
-			'headline'         => get_the_title( $post ),
-			'image'            => fernwell_post_schema_image( $post->ID ),
-			'datePublished'    => get_the_date( 'c', $post ),
-			'dateModified'     => wp_date( 'c', fernwell_post_modified_gmt( $post ) ),
-			'author'           => array( '@id' => $base . '#kenneth' ),
-			'publisher'        => array( '@id' => $base . '#org' ),
-			'isPartOf'         => array( '@id' => $answers_url . '#blog' ),
-			'mainEntityOfPage' => array( '@id' => $current_url . '#webpage' ),
-			'wordCount'        => str_word_count( wp_strip_all_tags( strip_shortcodes( $post->post_content ) ) ),
-			'timeRequired'     => 'PT' . fernwell_reading_time( $post ) . 'M',
-			'speakable'        => array(
-				'@type'       => 'SpeakableSpecification',
-				'cssSelector' => array( '.entry-header h1', '.answer-lede' ),
-			),
-			'inLanguage'       => 'en-US',
-		);
-		if ( $abstract ) {
-			$article['description'] = $abstract;
-			$article['abstract']    = $abstract;
-		}
-		$graph[] = $article;
-	}
-
-	$schema = array(
-		'@context' => 'https://schema.org',
-		'@graph'   => $graph,
-	);
-
-	echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES ) . '</script>' . "\n";
-}
-add_action( 'wp_head', 'fernwell_schema' );

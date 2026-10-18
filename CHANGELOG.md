@@ -45,6 +45,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `themes/fernwell/inc/schema.php`.
 - **Fernwell Answers byline**: every answer is now credited to Kenneth
   Raymond, on the page, in the feed, and in the structured data.
+- **Founder details**: the founder's structured data now describes his work
+  as an author, researcher, and software developer, and lists his areas of
+  expertise in full.
 
 ### Added
 
