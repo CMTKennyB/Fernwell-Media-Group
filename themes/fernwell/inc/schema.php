@@ -16,8 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Set a property on the graph's WebPage node (mainEntity, hasPart, ...).
+ * Set a property on the graph's page node (mainEntity, hasPart, ...).
  * Found by type, not position, so reordering the graph never misplaces it.
+ * The Answers listing types its page node as CollectionPage, a WebPage
+ * subtype, so both types match here.
  *
  * @param array  $graph Schema graph nodes.
  * @param string $prop  Property name.
@@ -26,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function fernwell_schema_webpage_set( array $graph, $prop, $value ) {
 	foreach ( $graph as $i => $node ) {
-		if ( 'WebPage' === $node['@type'] ) {
+		if ( 'WebPage' === $node['@type'] || 'CollectionPage' === $node['@type'] ) {
 			$graph[ $i ][ $prop ] = $value;
 		}
 	}
@@ -44,9 +46,12 @@ function fernwell_schema_webpage_set( array $graph, $prop, $value ) {
  * standalone FAQPage, plus a Book node once FERNWELL_BOOK_URL is set, and
  * decouples its top-level entities (see the front-page block below) so
  * WebPage, Organization, WebSite, and FAQPage each stand as their own node.
- * The Answers surfaces add a Blog node named Fernwell Answers. Singular pages
- * add BreadcrumbList; posts add BlogPosting, anchored to the Blog node.
- * FAQ copy comes from fernwell_faqs(), the same source front-page.php renders.
+ * The Answers listing types its page node as CollectionPage and adds a Blog
+ * node named Fernwell Answers. Singular pages add BreadcrumbList; posts add
+ * BlogPosting, anchored to the Blog node, plus a single-question FAQPage whose
+ * answer is the post's lede paragraph (the direct answer, visible in full on
+ * the post). Homepage FAQ copy comes from fernwell_faqs(), the same source
+ * front-page.php renders.
  */
 function fernwell_schema() {
 	$base = home_url( '/' );
@@ -139,8 +144,11 @@ function fernwell_schema() {
 	);
 
 	if ( $current_url ) {
+		// The Answers listing is a collection of posts, so it describes itself
+		// as a CollectionPage (a WebPage subtype); every other modelled page is
+		// a plain WebPage.
 		$graph[] = array(
-			'@type'      => 'WebPage',
+			'@type'      => is_home() ? 'CollectionPage' : 'WebPage',
 			'@id'        => $current_url . '#webpage',
 			'url'        => $current_url,
 			'name'       => wp_get_document_title(),
@@ -281,6 +289,29 @@ function fernwell_schema() {
 		}
 		$graph   = fernwell_schema_webpage_set( $graph, 'mainEntity', array( '@id' => $current_url . '#article' ) );
 		$graph[] = $article;
+
+		// Each answer post is one question with one authoritative answer, so it
+		// emits a single-question FAQPage. The answer is the post's lede
+		// paragraph, the direct answer shown in full at the top of the page, so
+		// the markup matches the visible content exactly. The node stays
+		// unreferenced, so it reads as its own FAQ entity.
+		$lede = fernwell_answer_lede( $post );
+		if ( $lede ) {
+			$graph[] = array(
+				'@type'      => 'FAQPage',
+				'@id'        => $current_url . '#faq',
+				'mainEntity' => array(
+					array(
+						'@type'          => 'Question',
+						'name'           => html_entity_decode( wp_strip_all_tags( get_the_title( $post ) ), ENT_QUOTES, 'UTF-8' ),
+						'acceptedAnswer' => array(
+							'@type' => 'Answer',
+							'text'  => $lede,
+						),
+					),
+				),
+			);
+		}
 	}
 
 	if ( is_front_page() ) {

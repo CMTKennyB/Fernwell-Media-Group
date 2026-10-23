@@ -516,6 +516,24 @@ function fernwell_lede_class( $content ) {
 add_filter( 'the_content', 'fernwell_lede_class', 9 );
 
 /**
+ * The post's lede paragraph as plain text: the direct answer, the same first
+ * <p> that fernwell_lede_class() stamps with .answer-lede. Blocks are rendered
+ * and text run through wpautop so classic and block posts both resolve, then
+ * entities are decoded so the schema carries real characters. Empty string if
+ * the post opens with no paragraph.
+ *
+ * @param WP_Post $post
+ * @return string
+ */
+function fernwell_answer_lede( $post ) {
+	$html = wpautop( do_blocks( strip_shortcodes( $post->post_content ) ) );
+	if ( preg_match( '/<p\b[^>]*>(.*?)<\/p>/is', $html, $m ) ) {
+		return trim( html_entity_decode( wp_strip_all_tags( $m[1] ), ENT_QUOTES, 'UTF-8' ) );
+	}
+	return '';
+}
+
+/**
  * Listing excerpts end in an ellipsis so it's visually clear there's more
  * to read. Manual excerpts never get excerpt_more, so swap the trailing
  * period for one here. Scoped to the Answers listing loop; the excerpt
