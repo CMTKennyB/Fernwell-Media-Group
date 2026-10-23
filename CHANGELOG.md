@@ -34,8 +34,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   source repository, github.com/CMTKennyB/Fernwell-Media-Group. Pages
   and what they present now reference each other both ways (`mainEntity` and
   `mainEntityOfPage`): the Fernwell Answers listing with the blog, and each
-  answer with its article. The homepage FAQ is now linked to the homepage as
-  one of its parts.
+  answer with its article.
+- **Homepage structured data reads as four distinct entities**: the
+  homepage graph now presents its organization, website, page, and FAQ as
+  four separate top-level nodes, instead of folding the FAQ, and then the
+  organization and website, inside the page. Engines and validators read
+  each one cleanly as its own entity. Authorship stays connected through
+  the organization's founder link.
 - **Structured data accuracy**: later pages of the Fernwell Answers listing
   now describe their own address, matching their canonical link, instead of
   claiming to be the first page. Not-found pages and search results no

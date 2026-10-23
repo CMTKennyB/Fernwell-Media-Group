@@ -34,14 +34,17 @@ function fernwell_schema_webpage_set( array $graph, $prop, $value ) {
 }
 
 /**
- * Structured data: one connected graph, every node cross-referenced by @id.
+ * Structured data: one connected graph, cross-referenced by @id, on every
+ * page except the front page.
  *
  * Sitewide: Organization (#org), Person (#kenneth), WebSite (#website).
  * Pages the theme models (front page, singular content, the Answers listing
  * and its paginated pages) add a WebPage node for their own URL; 404s and
- * other requests carry the sitewide nodes only. Front page adds FAQPage as a
- * part of the page, plus a Book node once FERNWELL_BOOK_URL is set. The
- * Answers surfaces add a Blog node named Fernwell Answers. Singular pages
+ * other requests carry the sitewide nodes only. The front page adds a
+ * standalone FAQPage, plus a Book node once FERNWELL_BOOK_URL is set, and
+ * decouples its top-level entities (see the front-page block below) so
+ * WebPage, Organization, WebSite, and FAQPage each stand as their own node.
+ * The Answers surfaces add a Blog node named Fernwell Answers. Singular pages
  * add BreadcrumbList; posts add BlogPosting, anchored to the Blog node.
  * FAQ copy comes from fernwell_faqs(), the same source front-page.php renders.
  */
@@ -238,13 +241,11 @@ function fernwell_schema() {
 				),
 			);
 		}
-		// The FAQ is one section of the homepage, not the whole page: link
-		// the two through hasPart and isPartOf.
-		$graph   = fernwell_schema_webpage_set( $graph, 'hasPart', array( '@id' => $base . '#faq' ) );
+		// The FAQ stands as its own node, not wrapped into the homepage
+		// WebPage, so engines and validators treat it as a distinct FAQ entity.
 		$graph[] = array(
 			'@type'      => 'FAQPage',
 			'@id'        => $base . '#faq',
-			'isPartOf'   => array( '@id' => $current_url . '#webpage' ),
 			'mainEntity' => $main,
 		);
 	}
@@ -280,6 +281,29 @@ function fernwell_schema() {
 		}
 		$graph   = fernwell_schema_webpage_set( $graph, 'mainEntity', array( '@id' => $current_url . '#article' ) );
 		$graph[] = $article;
+	}
+
+	if ( is_front_page() ) {
+		// Decouple the homepage's top-level entities. A validator or engine
+		// gives a node its own card only when nothing else in the graph points
+		// at its @id, so dropping these four inbound links lets WebPage,
+		// Organization, WebSite, and FAQPage each stand as its own node instead
+		// of Organization and WebSite nesting inside WebPage. Every other page
+		// keeps the fully cross-referenced graph. The Organization-to-Person
+		// founder link stays, so authorship is unaffected.
+		foreach ( $graph as $i => $node ) {
+			switch ( $node['@type'] ) {
+				case 'WebPage':
+					unset( $graph[ $i ]['isPartOf'], $graph[ $i ]['about'] );
+					break;
+				case 'WebSite':
+					unset( $graph[ $i ]['publisher'] );
+					break;
+				case 'Person':
+					unset( $graph[ $i ]['worksFor'] );
+					break;
+			}
+		}
 	}
 
 	$schema = array(
