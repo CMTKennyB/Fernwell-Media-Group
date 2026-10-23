@@ -65,6 +65,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   header, at the end of every answer, in the sitemap, in llms.txt, and as a
   Book entry in the structured data.
 
+- **Site Health: robots.txt check** confirms crawlers get the site's own
+  crawler policy. It warns when a robots.txt file in the site root replaces
+  the policy, or when a host, CDN, or another plugin changes the file on the
+  way out.
+
 ### Fixed
 
 - **Scanner safety**: the scanner now connects only to the exact address it
@@ -81,6 +86,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Posts set to noindex** no longer appear in llms.txt, the blog's
   structured data, the homepage list of answers, or the 404 page, matching
   the sitemaps.
+- **robots.txt for named crawlers**: the AI, answer-engine, and search
+  crawlers welcomed by name, Bingbot among them, now skip the admin area and
+  internal search results, like every other crawler. Search results are now
+  kept out of the crawl on every page, not only the homepage.
+- **Sitemap addresses**: the XML sitemap and its stylesheet now appear only
+  at /sitemap.xml and /sitemap.xsl, never as a copy of another page. A
+  "sitemap" parameter on an ordinary link no longer redirects visitors to
+  the sitemap.
+- **Sitemap reliability**: stray output from elsewhere on the site can no
+  longer break the sitemap, a malformed entry is left out instead of
+  corrupting the file, and a post with a missing date no longer shows the
+  year -0001.
+- **Sitemap speed**: the URL list is cached and refreshed whenever a post
+  changes. Engines that already hold the current sitemap get a short "not
+  modified" reply. Past 50,000 addresses, the sitemap becomes an index of
+  numbered files, as the sitemap standard requires.
+- **Sitemap browser view**: it shows the new Fernwell Media Group lockup,
+  takes its look from the site's own stylesheet so the two stay matched,
+  renders in standards mode, keeps its links visible on phones, and no
+  longer prints an empty "Last modified" label.
+- **One address for machine files**: the sitemap, its stylesheet, and
+  llms.txt now send visitors from www and any other alternate address to
+  the main domain, like every other page, instead of serving a second copy.
+- **Permalinks after a deploy**: new or changed site addresses, llms.txt
+  included, now take effect on their own without a manual permalink save.
 
 ## [3.0.0] - 2026-09-26
 

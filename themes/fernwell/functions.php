@@ -390,9 +390,14 @@ add_filter( 'query_vars', 'fernwell_llms_query_var' );
 
 function fernwell_llms_serve() {
 	if ( get_query_var( 'fernwell_llms' ) ) {
-		// One canonical URL: the slashed form goes back to the bare file path.
+		// One canonical URL: the slashed form, and any host other than the
+		// home URL's (www, a preview domain), go back to the bare file path.
 		$path = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
-		if ( is_string( $path ) && '/' === substr( $path, -1 ) ) {
+		$home = wp_parse_url( home_url() );
+		$want = strtolower( $home['host'] . ( isset( $home['port'] ) ? ':' . $home['port'] : '' ) );
+		$have = isset( $_SERVER['HTTP_HOST'] ) ? strtolower( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : $want;
+		$host = preg_replace( '/:(?:80|443)$/', '', $have ) === preg_replace( '/:(?:80|443)$/', '', $want );
+		if ( ( is_string( $path ) && '/' === substr( $path, -1 ) ) || ! $host ) {
 			wp_safe_redirect( home_url( '/llms.txt' ), 301 );
 			exit;
 		}
