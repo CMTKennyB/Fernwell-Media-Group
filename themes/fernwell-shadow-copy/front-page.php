@@ -144,7 +144,7 @@ if ( $fernwell_book ) :
     <h2>Fernwell Answers:</h2>
     <p class="sub"><?php echo esc_html( fernwell_answers_description() ); ?></p>
     <div class="answers-strip">
-      <?php foreach ( get_posts( array( 'numberposts' => 3, 'post_status' => 'publish' ) ) as $fernwell_answer ) : ?>
+      <?php foreach ( get_posts( array( 'numberposts' => 3, 'post_status' => 'publish', 'meta_query' => fernwell_indexable_meta_query() ) ) as $fernwell_answer ) : ?>
         <a class="answers-strip__item" href="<?php echo esc_url( get_permalink( $fernwell_answer ) ); ?>">
           <h3><?php echo esc_html( get_the_title( $fernwell_answer ) ); ?></h3>
           <span class="meta"><?php echo esc_html( get_the_date( '', $fernwell_answer ) ); ?> <span aria-hidden="true">&middot;</span> <?php echo esc_html( fernwell_reading_time( $fernwell_answer ) ); ?> min read</span>

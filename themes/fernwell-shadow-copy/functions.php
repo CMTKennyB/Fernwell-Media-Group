@@ -17,8 +17,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FERNWELL_VERSION', '3.0.0' );
-
 require get_theme_file_path( 'inc/post-meta.php' );
 require get_theme_file_path( 'inc/schema.php' );
 
@@ -131,8 +129,7 @@ function fernwell_faqs() {
 
 /**
  * One-line description of the Fernwell Answers section, shared by the
- * meta description and the Blog schema node. Mirrors the visible intro
- * copy in index.php; keep the three in sync.
+ * meta description, the Blog schema node, and the intro in index.php.
  */
 function fernwell_answers_description() {
 	return "Direct answers to the questions you're asking about AI search and being visible where buying decisions now start.";

@@ -24,11 +24,7 @@
 <header class="site">
   <div class="wrap nav">
     <a class="brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
-      <span class="tile">FMG</span>
-      <span class="words">
-        <span class="top">Fernwell</span><br>
-        <span class="bot">Media Group</span>
-      </span>
+      <img src="<?php echo esc_url( get_template_directory_uri() . '/assets/images/fernwell-lockup.svg' ); ?>" alt="Fernwell Media Group" width="246" height="50">
     </a>
     <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">
       <span class="nav-toggle__bars" aria-hidden="true"><span></span><span></span><span></span></span>
