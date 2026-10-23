@@ -53,10 +53,10 @@ function fernwell_scripts() {
 		array(),
 		null
 	);
-	wp_enqueue_style( 'fernwell-style', get_stylesheet_uri(), array( 'fernwell-fonts' ), FERNWELL_VERSION );
-	wp_enqueue_script( 'fernwell-nav', get_theme_file_uri( 'assets/js/nav.js' ), array(), FERNWELL_VERSION, true );
+	wp_enqueue_style( 'fernwell-style', get_stylesheet_uri(), array( 'fernwell-fonts' ), null );
+	wp_enqueue_script( 'fernwell-nav', get_theme_file_uri( 'assets/js/nav.js' ), array(), null, true );
 	if ( is_home() || is_singular( 'post' ) ) {
-		wp_enqueue_script( 'fernwell-answers-nav', get_theme_file_uri( 'assets/js/answers-nav.js' ), array(), FERNWELL_VERSION, true );
+		wp_enqueue_script( 'fernwell-answers-nav', get_theme_file_uri( 'assets/js/answers-nav.js' ), array(), null, true );
 	}
 }
 add_action( 'wp_enqueue_scripts', 'fernwell_scripts' );
@@ -440,7 +440,7 @@ add_filter( 'redirect_canonical', 'fernwell_llms_canonical' );
  * crawlers read always names the citable posts without manual upkeep.
  */
 function fernwell_llms_answers_section() {
-	$posts = get_posts( array( 'numberposts' => -1, 'post_status' => 'publish' ) );
+	$posts = get_posts( array( 'numberposts' => -1, 'post_status' => 'publish', 'meta_query' => fernwell_indexable_meta_query() ) );
 	if ( ! $posts ) {
 		return '';
 	}

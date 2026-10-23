@@ -21,7 +21,7 @@ get_header();
       <h1>This page isn't the answer.</h1>
     </header>
     <div class="entry-content">
-      <p>The URL you followed doesn't exist here, which is ironic for a site in the findability space, and we'd rather own this than show you a generic error.</p>
+      <p>The URL you followed doesn't exist here, which is ironic for a site in the findability space, and we'd rather own this than show you a generic error message.</p>
       <p>Here's where the answers actually live:</p>
       <div class="reentry-actions">
         <a class="btn primary" href="<?php echo esc_url( home_url( '/' ) ); ?>">Back to the homepage</a>
@@ -30,7 +30,7 @@ get_header();
       </div>
       <p>Or tell us what you were looking for at <a href="mailto:hello@fernwellgroup.com">hello@fernwellgroup.com</a> and a human will answer.</p>
     </div>
-    <?php $fernwell_recent = get_posts( array( 'numberposts' => 3, 'post_status' => 'publish' ) ); ?>
+    <?php $fernwell_recent = get_posts( array( 'numberposts' => 3, 'post_status' => 'publish', 'meta_query' => fernwell_indexable_meta_query() ) ); ?>
     <?php if ( $fernwell_recent ) : ?>
     <div class="reentry-answers">
       <h2>Latest answers</h2>

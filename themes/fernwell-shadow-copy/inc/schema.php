@@ -112,6 +112,7 @@ function fernwell_schema() {
 			),
 			'sameAs'      => array(
 				'https://www.linkedin.com/in/kenny-raymond/',
+				'https://www.amazon.com/stores/Kenneth-Raymond/author/B0BD39864J',
 			),
 			'hasCredential' => array(
 				'@type'              => 'EducationalOccupationalCredential',
@@ -179,7 +180,7 @@ function fernwell_schema() {
 			}
 			$graph = fernwell_schema_webpage_set( $graph, 'mainEntity', array( '@id' => $answers_url . '#blog' ) );
 			$blog['blogPost'] = array();
-			foreach ( get_posts( array( 'numberposts' => -1, 'post_status' => 'publish', 'fields' => 'ids' ) ) as $answer_id ) {
+			foreach ( get_posts( array( 'numberposts' => -1, 'post_status' => 'publish', 'fields' => 'ids', 'meta_query' => fernwell_indexable_meta_query() ) ) as $answer_id ) {
 				$blog['blogPost'][] = array( '@id' => get_permalink( $answer_id ) . '#article' );
 			}
 		}

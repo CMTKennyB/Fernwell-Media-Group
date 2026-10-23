@@ -17,7 +17,7 @@ get_header();
 <div class="answers-head">
   <div class="wrap">
     <h1>Fernwell Answers:</h1>
-    <p>Direct answers to the questions you're asking about AI search and being visible where buying decisions now start.</p>
+    <p><?php echo esc_html( fernwell_answers_description() ); ?></p>
   </div>
 </div>
 

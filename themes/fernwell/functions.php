@@ -17,8 +17,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FERNWELL_VERSION', '3.0.0' );
-
 require get_theme_file_path( 'inc/post-meta.php' );
 require get_theme_file_path( 'inc/schema.php' );
 
@@ -53,10 +51,10 @@ function fernwell_scripts() {
 		array(),
 		null
 	);
-	wp_enqueue_style( 'fernwell-style', get_stylesheet_uri(), array( 'fernwell-fonts' ), FERNWELL_VERSION );
-	wp_enqueue_script( 'fernwell-nav', get_theme_file_uri( 'assets/js/nav.js' ), array(), FERNWELL_VERSION, true );
+	wp_enqueue_style( 'fernwell-style', get_stylesheet_uri(), array( 'fernwell-fonts' ), null );
+	wp_enqueue_script( 'fernwell-nav', get_theme_file_uri( 'assets/js/nav.js' ), array(), null, true );
 	if ( is_home() || is_singular( 'post' ) ) {
-		wp_enqueue_script( 'fernwell-answers-nav', get_theme_file_uri( 'assets/js/answers-nav.js' ), array(), FERNWELL_VERSION, true );
+		wp_enqueue_script( 'fernwell-answers-nav', get_theme_file_uri( 'assets/js/answers-nav.js' ), array(), null, true );
 	}
 }
 add_action( 'wp_enqueue_scripts', 'fernwell_scripts' );
@@ -131,8 +129,7 @@ function fernwell_faqs() {
 
 /**
  * One-line description of the Fernwell Answers section, shared by the
- * meta description and the Blog schema node. Mirrors the visible intro
- * copy in index.php; keep the three in sync.
+ * meta description, the Blog schema node, and the intro in index.php.
  */
 function fernwell_answers_description() {
 	return "Direct answers to the questions you're asking about AI search and being visible where buying decisions now start.";
@@ -440,7 +437,7 @@ add_filter( 'redirect_canonical', 'fernwell_llms_canonical' );
  * crawlers read always names the citable posts without manual upkeep.
  */
 function fernwell_llms_answers_section() {
-	$posts = get_posts( array( 'numberposts' => -1, 'post_status' => 'publish' ) );
+	$posts = get_posts( array( 'numberposts' => -1, 'post_status' => 'publish', 'meta_query' => fernwell_indexable_meta_query() ) );
 	if ( ! $posts ) {
 		return '';
 	}

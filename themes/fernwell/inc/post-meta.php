@@ -161,7 +161,7 @@ function fernwell_meta_box_assets( $hook ) {
 		return;
 	}
 	wp_enqueue_media();
-	wp_enqueue_script( 'fernwell-admin-meta', get_theme_file_uri( 'assets/js/admin-meta.js' ), array(), FERNWELL_VERSION, true );
+	wp_enqueue_script( 'fernwell-admin-meta', get_theme_file_uri( 'assets/js/admin-meta.js' ), array(), null, true );
 }
 add_action( 'admin_enqueue_scripts', 'fernwell_meta_box_assets' );
 

@@ -18,8 +18,6 @@
 
 defined( 'ABSPATH' ) || exit;
 
-/** Email address the results mailto link sends to. */
-const FMG_SCAN_CONTACT = 'hello@fernwellgroup.com';
 
 /** Scans allowed per IP per hour. */
 const FMG_SCAN_RATE_LIMIT = 10;
@@ -85,7 +83,8 @@ add_action(
  * @return WP_REST_Response|WP_Error
  */
 function fmg_scan_handle_request( $request ) {
-	$url = fmg_scan_normalize_url( (string) $request->get_param( 'url' ) );
+	// Parse only: DNS waits until the request has passed the rate limit.
+	$url = fmg_scan_normalize_url( (string) $request->get_param( 'url' ), false );
 	if ( is_wp_error( $url ) ) {
 		return $url;
 	}
@@ -102,6 +101,11 @@ function fmg_scan_handle_request( $request ) {
 	$limited = fmg_scan_check_rate_limit();
 	if ( is_wp_error( $limited ) ) {
 		return $limited;
+	}
+
+	$safe = fmg_scan_host_is_public( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+	if ( is_wp_error( $safe ) ) {
+		return $safe;
 	}
 
 	$result = fmg_scan_run( $url );
@@ -217,7 +221,7 @@ function fmg_scan_log_result( $result ) {
 			'categories'   => wp_json_encode( $categories ),
 			'checks'       => wp_json_encode( $checks ),
 			'eligibility'  => wp_json_encode( array_map( function ( $e ) { return array( $e['key'], $e['state'] ); }, (array) ( $result['eligibility'] ?? array() ) ) ),
-			'states'       => wp_json_encode( $result['states'] ?? array() ),
+			'states'       => wp_json_encode( array_diff_key( (array) ( $result['states'] ?? array() ), array( 'reasons' => true ) ) ), // Reasons can quote page URLs.
 		),
 		array( '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s' )
 	);
@@ -451,8 +455,25 @@ function fmg_scan_check_rate_limit() {
 
 	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
 	$ip  = (string) apply_filters( 'fmg_scan_client_ip', $ip );
+	// One IPv6 subscriber holds a whole /64, so count the network, not the address;
+	// IPv4-mapped addresses (::ffff:a.b.c.d) are IPv4 and stay per address.
+	if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+		$hex = bin2hex( inet_pton( $ip ) );
+		$ip  = 0 === strpos( $hex, '00000000000000000000ffff' ) ? inet_ntop( hex2bin( substr( $hex, 24 ) ) ) : substr( $hex, 0, 16 ) . '::/64';
+	}
 	$key = 'fmg_rl_' . md5( $ip );
+
+	// A named lock serializes the read and write, so parallel requests from one
+	// address cannot all read the same count and slip past the cap together.
+	global $wpdb;
+	if ( 1 !== (int) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 5)', $key ) ) ) {
+		return new WP_Error( 'fmg_busy', 'The scanner is busy. Try again in a moment.', array( 'status' => 503 ) );
+	}
 	$hit = (int) get_transient( $key );
+	if ( $hit < FMG_SCAN_RATE_LIMIT ) {
+		set_transient( $key, $hit + 1, HOUR_IN_SECONDS );
+	}
+	$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $key ) );
 
 	if ( $hit >= FMG_SCAN_RATE_LIMIT ) {
 		return new WP_Error(
@@ -462,7 +483,6 @@ function fmg_scan_check_rate_limit() {
 		);
 	}
 
-	set_transient( $key, $hit + 1, HOUR_IN_SECONDS );
 	return true;
 }
 
@@ -476,10 +496,11 @@ function fmg_scan_check_rate_limit() {
  * Validate and normalize a submitted URL, rejecting anything that could reach internal hosts.
  * Scheme and host are lowercased, the query is kept, the fragment is dropped.
  *
- * @param string $raw Raw user input.
+ * @param string $raw        Raw user input.
+ * @param bool   $check_host Resolve and vet the host; false parses only, with no DNS.
  * @return string|WP_Error
  */
-function fmg_scan_normalize_url( $raw ) {
+function fmg_scan_normalize_url( $raw, $check_host = true ) {
 	$raw = trim( $raw );
 	if ( '' === $raw ) {
 		return new WP_Error( 'fmg_bad_url', 'Enter a website address to scan.', array( 'status' => 400 ) );
@@ -504,7 +525,7 @@ function fmg_scan_normalize_url( $raw ) {
 	}
 
 	$host = strtolower( $parts['host'] );
-	$safe = fmg_scan_host_is_public( $host );
+	$safe = $check_host ? fmg_scan_host_is_public( $host ) : true;
 	if ( is_wp_error( $safe ) ) {
 		return $safe;
 	}
@@ -559,8 +580,75 @@ function fmg_scan_host_is_public( $host ) {
 		}
 	}
 
+	fmg_scan_pinned_ip( $host, $ips[0] );
 	return true;
 }
+
+/**
+ * Remember, or look up, the address a host was validated against.
+ *
+ * @param string      $host Hostname.
+ * @param string|null $ip   Address to record; omit to read.
+ * @return string|null
+ */
+function fmg_scan_pinned_ip( $host, $ip = null ) {
+	static $pins = array();
+	if ( null !== $ip ) {
+		$pins[ $host ] = $ip;
+	}
+	return isset( $pins[ $host ] ) ? $pins[ $host ] : null;
+}
+
+/**
+ * Connect scanner requests to the address that passed validation. Without this,
+ * cURL resolves the host again, and a DNS server that answers public for the
+ * check and private for the connect (rebinding) would reach internal hosts.
+ * A host the scanner never validated is sent to a name that cannot resolve.
+ *
+ * @param resource|CurlHandle $handle cURL handle.
+ * @param array               $args   Request arguments.
+ */
+function fmg_scan_pin_resolve( $handle, $args ) {
+	if ( empty( $args['fmg_scan'] ) ) {
+		return;
+	}
+	$url  = (string) curl_getinfo( $handle, CURLINFO_EFFECTIVE_URL );
+	$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+	if ( '' === $host || filter_var( $host, FILTER_VALIDATE_IP ) ) {
+		return;
+	}
+	$ip = fmg_scan_pinned_ip( $host );
+	if ( null === $ip && true === fmg_scan_host_is_public( $host ) ) {
+		$ip = fmg_scan_pinned_ip( $host );
+	}
+	if ( null === $ip ) {
+		curl_setopt( $handle, CURLOPT_URL, 'http://blocked.invalid/' );
+		return;
+	}
+	$port = (int) wp_parse_url( $url, PHP_URL_PORT );
+	if ( ! $port ) {
+		$port = 'http' === strtolower( (string) wp_parse_url( $url, PHP_URL_SCHEME ) ) ? 80 : 443;
+	}
+	$addr = false !== strpos( $ip, ':' ) ? '[' . $ip . ']' : $ip;
+	curl_setopt( $handle, CURLOPT_RESOLVE, array( $host . ':' . $port . ':' . $addr ) );
+}
+add_action( 'http_api_curl', 'fmg_scan_pin_resolve', 10, 2 );
+
+/**
+ * The pin above exists only on the cURL transport. Where cURL is missing,
+ * refuse scanner requests rather than fetch without it.
+ *
+ * @param false|array|WP_Error $pre  Short-circuit value.
+ * @param array                $args Request arguments.
+ * @return false|array|WP_Error
+ */
+function fmg_scan_require_curl( $pre, $args ) {
+	if ( ! empty( $args['fmg_scan'] ) && ! WpOrg\Requests\Transport\Curl::test() ) {
+		return new WP_Error( 'fmg_no_curl', 'The scanner needs cURL on this server.' );
+	}
+	return $pre;
+}
+add_filter( 'pre_http_request', 'fmg_scan_require_curl', 10, 2 );
 
 /**
  * Ranges the PHP filter flags leave open on older versions: CGNAT, benchmarking,
@@ -639,22 +727,43 @@ function fmg_scan_absolutize( $target, $base ) {
 }
 
 /**
+ * Per-hop timeout: the hop's own ceiling, or whatever remains before the deadline.
+ *
+ * @param int   $ceiling  Seconds one hop may take.
+ * @param float $deadline Wall-clock time (microtime); 0 for none.
+ * @return float Seconds; 0 or less when the deadline has passed.
+ */
+function fmg_scan_hop_timeout( $ceiling, $deadline ) {
+	if ( ! $deadline ) {
+		return $ceiling;
+	}
+	$left = $deadline - microtime( true );
+	return $left < 1 ? 0 : min( $ceiling, $left );
+}
+
+/**
  * Fetch a URL, following redirects one hop at a time and revalidating every hop.
  *
  * @param string $url      Starting URL.
  * @param string $ua       User agent to send.
  * @param int    $max_hops Redirect ceiling (Google follows up to 10).
+ * @param float  $deadline Wall-clock time (microtime) no hop may run past; 0 for none.
  * @return array|WP_Error  array( body, status, headers, header_bytes, final_url, hops, seconds, capped )
  */
-function fmg_scan_fetch( $url, $ua = FMG_SCAN_UA, $max_hops = 10 ) {
+function fmg_scan_fetch( $url, $ua = FMG_SCAN_UA, $max_hops = 10, $deadline = 0 ) {
 	$hops  = 0;
 	$start = microtime( true );
 
 	for ( $i = 0; $i <= $max_hops; $i++ ) {
+		$timeout = fmg_scan_hop_timeout( 12, $deadline );
+		if ( $timeout <= 0 ) {
+			return new WP_Error( 'fmg_timeout', 'This scan ran out of time following the address.', array( 'status' => 504 ) );
+		}
 		$response = wp_remote_get(
 			$url,
 			array(
-				'timeout'             => 12,
+				'fmg_scan'            => true,
+				'timeout'             => $timeout,
 				'redirection'         => 0,
 				'user-agent'          => $ua,
 				'headers'             => array(
@@ -677,7 +786,7 @@ function fmg_scan_fetch( $url, $ua = FMG_SCAN_UA, $max_hops = 10 ) {
 		$status = (int) wp_remote_retrieve_response_code( $response );
 
 		if ( in_array( $status, array( 301, 302, 303, 307, 308 ), true ) ) {
-			$location = wp_remote_retrieve_header( $response, 'location' );
+			$location = fmg_scan_location( $response );
 			if ( empty( $location ) ) {
 				return new WP_Error( 'fmg_redirect_blank', sprintf( 'This address answers with a %d redirect that points nowhere.', $status ), array( 'status' => 400 ) );
 			}
@@ -731,6 +840,15 @@ function fmg_scan_headers_array( $response ) {
 }
 
 /**
+ * The Location header as one string. A repeated header comes back as an
+ * array; the first value is the one browsers follow.
+ */
+function fmg_scan_location( $response ) {
+	$location = wp_remote_retrieve_header( $response, 'location' );
+	return trim( (string) ( is_array( $location ) ? reset( $location ) : $location ) );
+}
+
+/**
  * Approximate size of the response headers in bytes.
  */
 function fmg_scan_header_bytes( $response ) {
@@ -747,26 +865,50 @@ function fmg_scan_header_bytes( $response ) {
  * @param string $url         URL.
  * @param int    $limit       Byte cap.
  * @param int    $redirects   Redirect hops allowed.
+ * @param float  $deadline    Wall-clock time (microtime) no hop may run past; 0 for none.
  * @return array array( status, body, error ) with body '' when absent or HTML.
  */
-function fmg_scan_fetch_text( $url, $limit = 262144, $redirects = 2 ) {
-	$response = wp_remote_get(
-		$url,
-		array(
-			'timeout'             => 8,
-			'redirection'         => $redirects,
-			'user-agent'          => FMG_SCAN_UA,
-			// reject_unsafe_urls also revalidates each followed redirect, so a
-			// robots.txt/llms.txt redirect cannot bounce the fetch to an internal host.
-			'limit_response_size' => $limit,
-			'reject_unsafe_urls'  => true,
-		)
-	);
-
-	if ( is_wp_error( $response ) ) {
-		return array( 'status' => 0, 'body' => '', 'error' => $response->get_error_message() );
+function fmg_scan_fetch_text( $url, $limit = 262144, $redirects = 2, $deadline = 0 ) {
+	// Redirects are followed here, one hop at a time, so every hop passes the
+	// same host validation and address pinning as the page fetch.
+	for ( $i = 0; ; $i++ ) {
+		$timeout = fmg_scan_hop_timeout( 8, $deadline );
+		if ( $timeout <= 0 ) {
+			return array( 'status' => 0, 'body' => '', 'error' => 'timeout' );
+		}
+		$response = wp_remote_get(
+			$url,
+			array(
+				'fmg_scan'            => true,
+				'timeout'             => $timeout,
+				'redirection'         => 0,
+				'user-agent'          => FMG_SCAN_UA,
+				'limit_response_size' => $limit,
+				'reject_unsafe_urls'  => true,
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return array( 'status' => 0, 'body' => '', 'error' => $response->get_error_message() );
+		}
+		$status = (int) wp_remote_retrieve_response_code( $response );
+		if ( ! in_array( $status, array( 301, 302, 303, 307, 308 ), true ) ) {
+			break;
+		}
+		// Past the hop limit, or a redirect to nowhere or to itself: report it the
+		// way the robots.txt reader expects (status 0, an error naming the redirect).
+		$location = fmg_scan_location( $response );
+		if ( $i >= $redirects || '' === $location ) {
+			return array( 'status' => 0, 'body' => '', 'error' => 'Too many redirects' );
+		}
+		$next = fmg_scan_normalize_url( fmg_scan_absolutize( $location, $url ) );
+		if ( is_wp_error( $next ) ) {
+			return array( 'status' => 0, 'body' => '', 'error' => $next->get_error_message() );
+		}
+		if ( $next === $url ) {
+			return array( 'status' => 0, 'body' => '', 'error' => 'Too many redirects' );
+		}
+		$url = $next;
 	}
-	$status = (int) wp_remote_retrieve_response_code( $response );
 	if ( 200 !== $status ) {
 		return array( 'status' => $status, 'body' => '', 'error' => '' );
 	}
@@ -1889,6 +2031,7 @@ function fmg_scan_site_identity( $ctx ) {
  */
 function fmg_scan_run( $url ) {
 	$t0           = microtime( true );
+	$deadline     = $t0 + FMG_SCAN_BUDGET;
 	$differential = null;
 	$primary_desc = '';
 
@@ -1901,7 +2044,7 @@ function fmg_scan_run( $url ) {
 	$origin_pre  = ( ! empty( $eparts_pre['scheme'] ) && ! empty( $eparts_pre['host'] ) ) ? $eparts_pre['scheme'] . '://' . $eparts_pre['host'] : '';
 	if ( '' !== $origin_pre ) {
 		$path_pre   = ( isset( $eparts_pre['path'] ) && '' !== $eparts_pre['path'] ? $eparts_pre['path'] : '/' ) . ( isset( $eparts_pre['query'] ) ? '?' . $eparts_pre['query'] : '' );
-		$robots_pre = fmg_scan_fetch_text( $origin_pre . '/robots.txt', 512000, 5 );
+		$robots_pre = fmg_scan_fetch_text( $origin_pre . '/robots.txt', 512000, 5, $deadline );
 		if ( '' !== $robots_pre['body'] ) {
 			$self = fmg_scan_robots_allowed( fmg_scan_robots_parse( $robots_pre['body'] ), 'FernwellReadabilityBot', $path_pre );
 			if ( ! $self['allowed'] ) {
@@ -1910,11 +2053,11 @@ function fmg_scan_run( $url ) {
 		}
 	}
 
-	$page = fmg_scan_fetch( $url );
+	$page = fmg_scan_fetch( $url, FMG_SCAN_UA, 10, $deadline );
 
 	// A dropped connection is retried once before it is read as a refusal.
-	if ( is_wp_error( $page ) && ! in_array( $page->get_error_code(), array( 'fmg_redirects', 'fmg_redirect_loop', 'fmg_redirect_blank', 'fmg_bad_url', 'fmg_bad_host' ), true ) ) {
-		$page = fmg_scan_fetch( $url );
+	if ( is_wp_error( $page ) && ! in_array( $page->get_error_code(), array( 'fmg_redirects', 'fmg_redirect_loop', 'fmg_redirect_blank', 'fmg_bad_url', 'fmg_bad_host', 'fmg_timeout' ), true ) ) {
+		$page = fmg_scan_fetch( $url, FMG_SCAN_UA, 10, $deadline );
 	}
 	if ( is_wp_error( $page ) && in_array( $page->get_error_code(), array( 'fmg_redirects', 'fmg_redirect_loop', 'fmg_redirect_blank', 'fmg_bad_url', 'fmg_bad_host' ), true ) ) {
 		return new WP_Error( 'fmg_unreachable', $page->get_error_message(), array( 'status' => 400 ) );
@@ -1922,7 +2065,7 @@ function fmg_scan_run( $url ) {
 
 	// Wall-clock budget. If the primary fetch alone spent the budget, stop here
 	// rather than stack a browser probe and the optional fetches on top of it.
-	if ( microtime( true ) - $t0 > FMG_SCAN_BUDGET ) {
+	if ( microtime( true ) - $t0 > FMG_SCAN_BUDGET || ( is_wp_error( $page ) && 'fmg_timeout' === $page->get_error_code() ) ) {
 		return new WP_Error( 'fmg_timeout', sprintf( 'This scan passed its %d-second budget before the page finished answering our host. The page may be slow to serve automated readers; try again.', FMG_SCAN_BUDGET ), array( 'status' => 504 ) );
 	}
 
@@ -1932,7 +2075,7 @@ function fmg_scan_run( $url ) {
 	$primary_bad = is_wp_error( $page ) || $page['status'] >= 400 || fmg_scan_page_is_thin( $page );
 	if ( $primary_bad && ( FMG_SCAN_BUDGET - ( microtime( true ) - $t0 ) ) > 15 ) {
 		$primary_desc = is_wp_error( $page ) ? 'no response' : ( $page['status'] >= 400 ? 'HTTP ' . $page['status'] : ( fmg_scan_detect_challenge( $page ) ?: 'a page with almost no text' ) );
-		$alt = fmg_scan_fetch( $url, FMG_SCAN_BROWSER_UA );
+		$alt = fmg_scan_fetch( $url, FMG_SCAN_BROWSER_UA, 10, $deadline );
 		if ( ! is_wp_error( $alt ) && $alt['status'] < 400 && ! fmg_scan_page_is_thin( $alt ) ) {
 			$differential = $primary_desc;
 			$page         = $alt;
@@ -1971,7 +2114,7 @@ function fmg_scan_run( $url ) {
 	$ld     = fmg_scan_extract_jsonld( $dom );
 	// Reuse the robots.txt already read for the self-token check when the final
 	// origin matches the entry origin; otherwise read the final origin's file.
-	$robots = ( null !== $robots_pre && $origin === $origin_pre ) ? $robots_pre : fmg_scan_fetch_text( $origin . '/robots.txt', 512000, 5 );
+	$robots = ( null !== $robots_pre && $origin === $origin_pre ) ? $robots_pre : fmg_scan_fetch_text( $origin . '/robots.txt', 512000, 5, $deadline );
 
 	$ctx = array(
 		'url'          => $final,
@@ -2010,10 +2153,10 @@ function fmg_scan_run( $url ) {
 	$ctx['budget_left']   = FMG_SCAN_BUDGET - ( microtime( true ) - $t0 );
 
 	// Optional fetches only while the budget allows.
-	$ctx['llms']    = $ctx['budget_left'] > 20 ? fmg_scan_fetch_text( $origin . '/llms.txt' ) : array( 'status' => 0, 'body' => '', 'error' => 'skipped' );
+	$ctx['llms']    = $ctx['budget_left'] > 20 ? fmg_scan_fetch_text( $origin . '/llms.txt', 262144, 2, $deadline ) : array( 'status' => 0, 'body' => '', 'error' => 'skipped' );
 	$ctx['sitemap'] = null;
 	if ( empty( $ctx['robots_groups']['sitemaps'] ) && $ctx['budget_left'] > 20 ) {
-		$ctx['sitemap'] = fmg_scan_fetch_text( $origin . '/sitemap.xml', 4096 );
+		$ctx['sitemap'] = fmg_scan_fetch_text( $origin . '/sitemap.xml', 4096, 2, $deadline );
 	}
 
 	$eligibility = fmg_scan_eligibility( $ctx );
@@ -3259,7 +3402,6 @@ function fmg_scan_shortcode() {
 			array(
 				'endpoint' => esc_url_raw( rest_url( 'fmg/v1/scan' ) ),
 				'nonce'    => wp_create_nonce( 'wp_rest' ),
-				'contact'  => FMG_SCAN_CONTACT,
 			)
 		) . ';',
 		'before'
@@ -3422,15 +3564,17 @@ function fmg_scan_css() {
   font-weight: 600; cursor: pointer;
 }
 .fmg-cta__btn:hover { background: var(--fmg-accent-hover); color: #fff; }
-.fmg-cta__btn--ghost { background: transparent; color: var(--fmg-accent); border: 1px solid #c2c8bc; }
-.fmg-cta__btn--ghost:hover { background: transparent; color: var(--fmg-accent-hover); border-color: var(--fmg-accent); }
 .fmg-cta__btn:focus-visible { outline: 3px solid var(--fmg-accent); outline-offset: 2px; }
-.fmg-cta__hint { font-size: .82rem; color: var(--fmg-ink-soft); margin: 14px 0 0; }
 
 @media (max-width: 560px) {
   .fmg-score { padding: 28px 22px; gap: 22px; }
   .fmg-cta { padding: 26px 22px; }
-  .fmg-elig th:nth-child(3), .fmg-elig td:nth-child(3) { display: none; }
+  /* Stack the reason under engine and state instead of dropping it. */
+  .fmg-elig thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .fmg-elig tr { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; border-bottom: 1px solid var(--fmg-line); }
+  .fmg-elig td { border-bottom: 0; }
+  .fmg-elig td.fmg-elig__reason { grid-column: 1 / -1; padding-top: 0; }
+  .fmg-elig__engine, .fmg-elig__state { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
   .fmg-score__arc, .fmg-cat__fill { transition: none; }
@@ -3553,7 +3697,6 @@ function fmg_scan_js() {
       band = 'Unscorable';
       summary = 'There is not enough server-side text to evaluate. See the note above.';
     } else {
-      var offset = C - (C * group.score) / 100;
       num = '<div class="fmg-score__num">' + group.score + '</div>';
       band = group.band.label;
       summary = group.band.summary;
@@ -3644,12 +3787,9 @@ function fmg_scan_js() {
       + '<p>A crawl by itself cannot measure namability. '
       + 'It requires asking real questions in leading search and answer engines, then measuring how often '
       + 'you’re named against your competitors.</p>'
-      + '<p>Send us your result, and we’ll tell you what it means for your market.</p>'
       + '<div class="fmg-cta__actions">'
-      + '<a class="fmg-cta__btn" id="fmg-mailto" href="#">Send these results to Fernwell</a>'
-      + '<button type="button" class="fmg-cta__btn fmg-cta__btn--ghost" id="fmg-copy">Copy results</button>'
+      + '<button type="button" class="fmg-cta__btn" id="fmg-copy">Copy results</button>'
       + '</div>'
-      + '<p class="fmg-cta__hint">Opens your email app with the summary already written. Nothing is sent until you send it.</p>'
       + '</div>';
 
     results.innerHTML = html;
@@ -3713,13 +3853,6 @@ function fmg_scan_js() {
       lines.push('All applicable checks passed.');
     }
     lines.push('');
-    lines.push('I would like to know what this means for how AI engines answer questions in my market.');
-    lines.push('');
-    lines.push('My three biggest competitors:');
-    lines.push('1.');
-    lines.push('2.');
-    lines.push('3.');
-    lines.push('');
     lines.push('This free scan is informational. A benchmark across engines and questions measures more, and its findings can differ.');
 
     return lines.join('\n');
@@ -3729,25 +3862,11 @@ function fmg_scan_js() {
     var body = summarize(data);
     var leg = data.legibility.score === null ? 'unscored' : data.legibility.score + ' legible';
     var cit = data.citability.score === null ? 'unscored' : data.citability.score + ' citable';
-    var subject = 'AI Visibility: ' + leg + '/' + cit + ' for ' + data.host;
-    var mailto = 'mailto:' + window.FMG_SCAN.contact
-      + '?subject=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(body);
-
-    var link = document.getElementById('fmg-mailto');
-    if (mailto.length > 1900) {
-      // Some mail clients truncate long mailto links. Trim to the scores plus the engine list.
-      var short = body.split('\n').slice(0, 18).join('\n')
-        + '\n\n(Full results copied separately.)';
-      mailto = 'mailto:' + window.FMG_SCAN.contact
-        + '?subject=' + encodeURIComponent(subject)
-        + '&body=' + encodeURIComponent(short);
-    }
-    link.setAttribute('href', mailto);
+    var heading = 'AI Visibility: ' + leg + '/' + cit + ' for ' + data.host;
 
     var copy = document.getElementById('fmg-copy');
     copy.addEventListener('click', function () {
-      var payload = subject + '\n\n' + body;
+      var payload = heading + '\n\n' + body;
       var done = function () {
         copy.textContent = 'Copied';
         setTimeout(function () { copy.textContent = 'Copy results'; }, 2200);

@@ -41,7 +41,7 @@
       <?php endif; ?>
       <a href="<?php echo esc_url( home_url( '/#faq' ) ); ?>">FAQ</a>
       <a href="<?php echo esc_url( home_url( '/#about' ) ); ?>">About</a>
-      <a href="<?php echo esc_url( home_url( '/answers/' ) ); ?>">Answers</a>
+      <a href="<?php echo esc_url( fernwell_answers_url() ); ?>">Answers</a>
       <a class="cta" href="<?php echo esc_url( home_url( '/#scan' ) ); ?>">Run the free scan</a>
     </nav>
   </div>

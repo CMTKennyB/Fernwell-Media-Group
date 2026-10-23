@@ -21,7 +21,7 @@
       echo esc_html( $fernwell_current_year > $fernwell_launch_year ? $fernwell_launch_year . '-' . $fernwell_current_year : (string) $fernwell_launch_year );
     ?> Fernwell Media Group. All rights reserved.</div>
     <div>
-      <a href="<?php echo esc_url( home_url( '/answers/' ) ); ?>">Answers</a> &middot;
+      <a href="<?php echo esc_url( fernwell_answers_url() ); ?>">Answers</a> &middot;
       <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>">Privacy</a> &middot;
       <a href="<?php echo esc_url( home_url( '/terms-of-service/' ) ); ?>">Terms</a> &middot;
       <a href="<?php echo esc_url( home_url( '/cookie-policy/' ) ); ?>">Cookies</a> &middot;

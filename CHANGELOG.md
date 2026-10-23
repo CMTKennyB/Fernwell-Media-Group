@@ -16,12 +16,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   monitoring as steps you can take yourself. The Services section and the
   spot-check offer are gone, and FAQ answers point to the free scan and to
   repeat measurement instead of paid work.
+- **New logo**: the header shows the new Fernwell Media Group lockup in
+  place of the FMG text badge.
 - **Header and posts**: the header button and the closing call to action on
   every answer now say "Run the free scan."
 - **Scanner**: the form note and both disclaimers now explain that
   namability takes a benchmark across engines and questions, rather than
   pointing to an audit. The scan limit message no longer offers to run scans
-  by email.
+  by email. Results no longer offer to send your scan to Fernwell: the email
+  button and its invitation are gone, "Copy results" remains, and the copied
+  summary ends with your scores and checks, with no competitor prompt.
 - **Legal pages**: the Terms and Privacy Policy no longer refer to consulting
   services or engagements.
 - **Not-found page**: the message now describes Fernwell as a site, not a
@@ -46,8 +50,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Fernwell Answers byline**: every answer is now credited to Kenneth
   Raymond, on the page, in the feed, and in the structured data.
 - **Founder details**: the founder's structured data now describes his work
-  as an author, researcher, and software developer, and lists his areas of
-  expertise in full.
+  as an author, researcher, and software developer, lists his areas of
+  expertise in full, and links his Amazon author page.
 
 ### Added
 
@@ -60,6 +64,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Fernwell Scanner 3.0* is set, the book appears on the homepage, in the
   header, at the end of every answer, in the sitemap, in llms.txt, and as a
   Book entry in the structured data.
+
+### Fixed
+
+- **Scanner safety**: the scanner now connects only to the exact address it
+  checked, so a site cannot redirect it to a private network mid-scan. The
+  hourly scan limit holds when many scans arrive at once, and every scan
+  stops at its time limit, redirects included.
+- **Scanner on phones**: the reason behind each engine's result now shows
+  under the engine name instead of being hidden on small screens.
+- **Scanner privacy**: the anonymous score record no longer keeps the
+  written reasons behind a result, which could quote a page address.
+- **Scanner reliability**: a site that sends two redirect locations no
+  longer breaks the scan, and the hourly limit now applies before the
+  scanner looks up an address.
+- **Posts set to noindex** no longer appear in llms.txt, the blog's
+  structured data, the homepage list of answers, or the 404 page, matching
+  the sitemaps.
 
 ## [3.0.0] - 2026-09-26
 
