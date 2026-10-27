@@ -75,6 +75,7 @@ function fernwell_schema() {
 			),
 			'sameAs'        => array(
 				'https://github.com/CMTKennyB/Fernwell-Media-Group',
+				'https://www.linkedin.com/company/fernwell-media-group',
 			),
 		),
 		array(

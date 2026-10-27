@@ -43,6 +43,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and what they present now reference each other both ways (`mainEntity` and
   `mainEntityOfPage`): the Fernwell Answers listing with the blog, and each
   answer with its article.
+- **Structured data**: the organization's `sameAs` now includes the Fernwell
+  Media Group LinkedIn company page; the founder's `sameAs` keeps his personal
+  LinkedIn profile alongside his Amazon author store.
 - Homepage structured data emits WebPage, Organization, WebSite, and
   FAQPage as separate top-level nodes.
 - Answers listing now emits CollectionPage structured data.
