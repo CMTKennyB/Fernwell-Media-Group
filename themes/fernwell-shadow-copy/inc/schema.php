@@ -16,8 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Set a property on the graph's WebPage node (mainEntity, hasPart, ...).
- * Found by type, not position, so reordering the graph never misplaces it.
+ * Set a property on the graph's page node (WebPage or CollectionPage).
  *
  * @param array  $graph Schema graph nodes.
  * @param string $prop  Property name.
@@ -26,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function fernwell_schema_webpage_set( array $graph, $prop, $value ) {
 	foreach ( $graph as $i => $node ) {
-		if ( 'WebPage' === $node['@type'] ) {
+		if ( 'WebPage' === $node['@type'] || 'CollectionPage' === $node['@type'] ) {
 			$graph[ $i ][ $prop ] = $value;
 		}
 	}
@@ -34,24 +33,14 @@ function fernwell_schema_webpage_set( array $graph, $prop, $value ) {
 }
 
 /**
- * Structured data: one connected graph, every node cross-referenced by @id.
- *
- * Sitewide: Organization (#org), Person (#kenneth), WebSite (#website).
- * Pages the theme models (front page, singular content, the Answers listing
- * and its paginated pages) add a WebPage node for their own URL; 404s and
- * other requests carry the sitewide nodes only. Front page adds FAQPage as a
- * part of the page, plus a Book node once FERNWELL_BOOK_URL is set. The
- * Answers surfaces add a Blog node named Fernwell Answers. Singular pages
- * add BreadcrumbList; posts add BlogPosting, anchored to the Blog node.
- * FAQ copy comes from fernwell_faqs(), the same source front-page.php renders.
+ * Print the page's JSON-LD graph in wp_head: Organization, Person and WebSite
+ * sitewide, plus the nodes that fit the current page (WebPage or
+ * CollectionPage, Blog, BlogPosting, FAQPage, BreadcrumbList, Book).
  */
 function fernwell_schema() {
 	$base = home_url( '/' );
 
-	// The URL this page describes. Only pages the theme models get a WebPage
-	// node; a 404, search results, or anything else keeps the sitewide nodes
-	// alone instead of borrowing another page's identity. Paginated Answers
-	// pages describe themselves, matching their canonical.
+	// URL of the page being described, empty for pages with no WebPage node.
 	$current_url = '';
 	if ( is_front_page() ) {
 		$current_url = $base;
@@ -136,8 +125,9 @@ function fernwell_schema() {
 	);
 
 	if ( $current_url ) {
+		// Answers listing is a CollectionPage; every other modelled page a WebPage.
 		$graph[] = array(
-			'@type'      => 'WebPage',
+			'@type'      => is_home() ? 'CollectionPage' : 'WebPage',
 			'@id'        => $current_url . '#webpage',
 			'url'        => $current_url,
 			'name'       => wp_get_document_title(),
@@ -168,13 +158,9 @@ function fernwell_schema() {
 			'isPartOf'    => array( '@id' => $base . '#website' ),
 			'inLanguage'  => 'en-US',
 		);
-		// The listing enumerates the series. Single posts point up through
-		// isPartOf instead: on a post page the other posts would be bare @id
-		// references that validators flag, and the list grows with every post.
+		// The listing enumerates the posts; single posts link up via isPartOf.
 		if ( is_home() ) {
-			// The listing page presents the Blog: link them both ways, matching
-			// how posts pair BlogPosting with their page. Only page one is the
-			// Blog's own page; later pages point at the Blog one way.
+			// Link page and Blog both ways; only page one is the Blog's page.
 			if ( ! is_paged() ) {
 				$blog['mainEntityOfPage'] = array( '@id' => $current_url . '#webpage' );
 			}
@@ -238,13 +224,10 @@ function fernwell_schema() {
 				),
 			);
 		}
-		// The FAQ is one section of the homepage, not the whole page: link
-		// the two through hasPart and isPartOf.
-		$graph   = fernwell_schema_webpage_set( $graph, 'hasPart', array( '@id' => $base . '#faq' ) );
+		// FAQPage as its own node, not nested in the homepage WebPage.
 		$graph[] = array(
 			'@type'      => 'FAQPage',
 			'@id'        => $base . '#faq',
-			'isPartOf'   => array( '@id' => $current_url . '#webpage' ),
 			'mainEntity' => $main,
 		);
 	}
@@ -280,6 +263,43 @@ function fernwell_schema() {
 		}
 		$graph   = fernwell_schema_webpage_set( $graph, 'mainEntity', array( '@id' => $current_url . '#article' ) );
 		$graph[] = $article;
+
+		// Single-question FAQPage: the post title as question, its lede as answer.
+		$lede = fernwell_answer_lede( $post );
+		if ( $lede ) {
+			$graph[] = array(
+				'@type'      => 'FAQPage',
+				'@id'        => $current_url . '#faq',
+				'mainEntity' => array(
+					array(
+						'@type'          => 'Question',
+						'name'           => html_entity_decode( wp_strip_all_tags( get_the_title( $post ) ), ENT_QUOTES, 'UTF-8' ),
+						'acceptedAnswer' => array(
+							'@type' => 'Answer',
+							'text'  => $lede,
+						),
+					),
+				),
+			);
+		}
+	}
+
+	if ( is_front_page() ) {
+		// Drop inbound links to these top-level nodes so WebPage, Organization,
+		// WebSite and FAQPage each stand alone. The founder link stays.
+		foreach ( $graph as $i => $node ) {
+			switch ( $node['@type'] ) {
+				case 'WebPage':
+					unset( $graph[ $i ]['isPartOf'], $graph[ $i ]['about'] );
+					break;
+				case 'WebSite':
+					unset( $graph[ $i ]['publisher'] );
+					break;
+				case 'Person':
+					unset( $graph[ $i ]['worksFor'] );
+					break;
+			}
+		}
 	}
 
 	$schema = array(
@@ -287,8 +307,7 @@ function fernwell_schema() {
 		'@graph'   => $graph,
 	);
 
-	// JSON_HEX_TAG and JSON_HEX_AMP keep any "</script>" or entity inside a
-	// value from ending or altering the script element.
+	// Escape <, > and & so no value can break out of the script element.
 	echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP ) . '</script>' . "\n";
 }
 add_action( 'wp_head', 'fernwell_schema' );

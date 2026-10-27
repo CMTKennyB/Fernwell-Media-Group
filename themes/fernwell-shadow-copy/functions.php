@@ -389,9 +389,14 @@ add_filter( 'query_vars', 'fernwell_llms_query_var' );
 
 function fernwell_llms_serve() {
 	if ( get_query_var( 'fernwell_llms' ) ) {
-		// One canonical URL: the slashed form goes back to the bare file path.
+		// One canonical URL: the slashed form, and any host other than the
+		// home URL's (www, a preview domain), go back to the bare file path.
 		$path = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
-		if ( is_string( $path ) && '/' === substr( $path, -1 ) ) {
+		$home = wp_parse_url( home_url() );
+		$want = strtolower( $home['host'] . ( isset( $home['port'] ) ? ':' . $home['port'] : '' ) );
+		$have = isset( $_SERVER['HTTP_HOST'] ) ? strtolower( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : $want;
+		$host = preg_replace( '/:(?:80|443)$/', '', $have ) === preg_replace( '/:(?:80|443)$/', '', $want );
+		if ( ( is_string( $path ) && '/' === substr( $path, -1 ) ) || ! $host ) {
 			wp_safe_redirect( home_url( '/llms.txt' ), 301 );
 			exit;
 		}
@@ -508,6 +513,24 @@ function fernwell_lede_class( $content ) {
 	return $content;
 }
 add_filter( 'the_content', 'fernwell_lede_class', 9 );
+
+/**
+ * The post's lede paragraph as plain text: the direct answer, the same first
+ * <p> that fernwell_lede_class() stamps with .answer-lede. Blocks are rendered
+ * and text run through wpautop so classic and block posts both resolve, then
+ * entities are decoded so the schema carries real characters. Empty string if
+ * the post opens with no paragraph.
+ *
+ * @param WP_Post $post
+ * @return string
+ */
+function fernwell_answer_lede( $post ) {
+	$html = wpautop( do_blocks( strip_shortcodes( $post->post_content ) ) );
+	if ( preg_match( '/<p\b[^>]*>(.*?)<\/p>/is', $html, $m ) ) {
+		return trim( html_entity_decode( wp_strip_all_tags( $m[1] ), ENT_QUOTES, 'UTF-8' ) );
+	}
+	return '';
+}
 
 /**
  * Listing excerpts end in an ellipsis so it's visually clear there's more
