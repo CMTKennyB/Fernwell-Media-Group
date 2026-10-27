@@ -40,7 +40,7 @@ get_header();
         <div class="actions">
           <a class="btn primary" href="<?php echo esc_url( home_url( '/#scan' ) ); ?>">Run the free scan</a>
           <?php if ( fernwell_book_url() ) : ?>
-          <a class="btn ghost" href="<?php echo esc_url( fernwell_book_url() ); ?>">Get the book</a>
+          <a class="btn ghost" href="<?php echo esc_url( fernwell_book_url() ); ?>" target="_blank" rel="noopener">Get the book</a>
           <?php endif; ?>
         </div>
       </aside>

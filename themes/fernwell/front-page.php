@@ -111,7 +111,7 @@ if ( $fernwell_book ) :
     <h2>The Fernwell Scanner 3.0</h2>
     <p class="sub">The full method behind the free scan: every check, why it earns its points, and the published engine rules it rests on. Read it to understand your score, or to run the same measurements yourself.</p>
     <div class="actions">
-      <a class="btn primary" href="<?php echo esc_url( $fernwell_book ); ?>">Get it on Amazon</a>
+      <a class="btn primary" href="<?php echo esc_url( $fernwell_book ); ?>" target="_blank" rel="noopener">Pre-order on Amazon</a>
     </div>
   </div>
 </section>

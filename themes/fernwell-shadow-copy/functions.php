@@ -79,17 +79,16 @@ function fernwell_answers_url() {
 }
 
 /**
- * Store listing for The Fernwell Scanner 3.0 book. Empty until launch, and
- * while empty every book surface (homepage section, nav link, post CTA
- * button, sitemap entry, Book schema node, llms.txt line) stays hidden.
- * Set it here, or define it earlier in wp-config.php.
+ * The Fernwell Scanner 3.0 store URL. While empty, every book surface
+ * (homepage section, nav link, post button, sitemap entry, Book schema node,
+ * llms.txt line) stays hidden. Set here or in wp-config.php.
  */
 if ( ! defined( 'FERNWELL_BOOK_URL' ) ) {
-	define( 'FERNWELL_BOOK_URL', '' );
+	define( 'FERNWELL_BOOK_URL', 'https://www.amazon.com/dp/B0HPBTWX9L' );
 }
 
 /**
- * The book's store URL, or an empty string before launch.
+ * The book's store URL, or an empty string when no listing is live yet.
  */
 function fernwell_book_url() {
 	return (string) FERNWELL_BOOK_URL;

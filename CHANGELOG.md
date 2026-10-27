@@ -22,6 +22,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   repeat measurement instead of paid work.
 - **New logo**: the header shows the new Fernwell Media Group lockup in
   place of the FMG text badge.
+- **Book surfaces**: the homepage book section, Book nav link, post button,
+  sitemap entry, Book structured data, and llms.txt line now render and link
+  to the book's store URL (`FERNWELL_BOOK_URL`); the book buttons open in a
+  new tab.
 - **Header and posts**: the header button and the closing call to action on
   every answer now say "Run the free scan."
 - **Scanner**: the form note and both disclaimers now explain that
