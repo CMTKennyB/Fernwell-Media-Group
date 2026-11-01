@@ -84,7 +84,7 @@ function fernwell_answers_url() {
  * llms.txt line) stays hidden. Set here or in wp-config.php.
  */
 if ( ! defined( 'FERNWELL_BOOK_URL' ) ) {
-	define( 'FERNWELL_BOOK_URL', 'https://www.amazon.com/dp/B0HPBTWX9L' );
+	define( 'FERNWELL_BOOK_URL', 'https://www.amazon.com/dp/B0HPF7N6BY' );
 }
 
 /**
